@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>岗位匹配小助手 ·《Java程序设计》课程组</title>
+<style>
+  :root{
+    --bg:#eef2f7; --card:#ffffff; --ink:#12293d; --sub:#5b7286; --line:#dfe6ee;
+    --brand:#14406b; --brand2:#1f6f8b; --accent:#e8833a; --ok:#0f9b8e; --warn:#c0392b;
+    --soft:#f6f9fc;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink); line-height:1.65;
+    font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased; padding-bottom:48px;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 16px}
+
+  /* ---------- 头部 ---------- */
+  header{
+    background:linear-gradient(135deg,#0f3352 0%,#14406b 55%,#1c5a7d 100%);
+    color:#fff;padding:26px 0 24px;margin-bottom:22px;
+  }
+  .h-top{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  header h1{font-size:23px;font-weight:700;letter-spacing:.5px}
+  .h-badge{
+    font-size:11.5px;padding:3px 9px;border-radius:20px;
+    background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);
+  }
+  header p{font-size:13.5px;color:#c3d8e8;margin-top:8px;max-width:760px}
+  .h-meta{display:flex;gap:22px;margin-top:16px;flex-wrap:wrap}
+  .h-meta div{font-size:12px;color:#a8c4d9}
+  .h-meta b{display:block;font-size:19px;color:#fff;font-weight:700;letter-spacing:.5px}
+
+  /* ---------- 表单卡 ---------- */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:16px;
+    box-shadow:0 1px 3px rgba(18,41,61,.05)}
+  .step{margin-bottom:20px}
+  .step:last-of-type{margin-bottom:8px}
+  .step-h{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+  .num{width:21px;height:21px;border-radius:50%;background:var(--brand);color:#fff;font-size:12px;
+    display:flex;align-items:center;justify-content:center;font-weight:700;flex:0 0 auto}
+  .step-h b{font-size:15px}
+  .step-h em{font-style:normal;font-size:12px;color:var(--sub)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    border:1.5px solid var(--line);background:#fff;color:var(--ink);
+    padding:8px 14px;border-radius:20px;font-size:13.5px;cursor:pointer;
+    transition:.15s;font-family:inherit;line-height:1.3;
+  }
+  .chip:hover{border-color:#b9cdde;background:var(--soft)}
+  .chip.on{border-color:var(--brand);background:#eaf2f9;color:var(--brand);font-weight:600}
+  .chip.on::before{content:"✓ ";font-size:12px}
+  .chip small{display:block;font-size:11px;color:var(--sub);font-weight:400;margin-top:1px}
+  .chip.on small{color:var(--brand2)}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+  .btn{
+    border:0;border-radius:9px;padding:11px 22px;font-size:14.5px;font-weight:600;cursor:pointer;
+    font-family:inherit;transition:.15s;
+  }
+  .btn-main{background:var(--brand);color:#fff}
+  .btn-main:hover{background:#1a4f7f}
+  .btn-main:disabled{background:#b8c6d3;cursor:not-allowed}
+  .btn-ghost{background:#fff;color:var(--brand);border:1.5px solid var(--line)}
+  .btn-ghost:hover{border-color:var(--brand);background:var(--soft)}
+
+  /* ---------- 结果 ---------- */
+  #result{display:none}
+  .sum{
+    background:linear-gradient(135deg,#14406b,#1f6f8b);color:#fff;border-radius:14px;
+    padding:18px 22px;margin-bottom:16px;
+  }
+  .sum .line1{font-size:13px;color:#bcd6e6;margin-bottom:6px}
+  .sum .line2{font-size:17px;font-weight:700;line-height:1.5}
+  .sum .line2 span{color:#ffd08a}
+  .sum .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .sum .tags i{
+    font-style:normal;font-size:12px;background:rgba(255,255,255,.15);
+    padding:4px 10px;border-radius:14px;border:1px solid rgba(255,255,255,.22);
+  }
+  .sec-t{display:flex;align-items:center;gap:10px;margin:20px 0 10px}
+  .sec-t b{font-size:16px}
+  .sec-t small{font-size:12px;color:var(--sub)}
+
+  table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;
+    box-shadow:0 1px 3px rgba(18,41,61,.06);font-size:13px}
+  thead th{background:var(--brand);color:#fff;font-weight:600;text-align:left;padding:11px 12px;font-size:12.5px;
+    white-space:nowrap;letter-spacing:.3px}
+  tbody td{padding:11px 12px;border-bottom:1px solid #edf2f7;vertical-align:top}
+  tbody tr:nth-child(even){background:#fafcfe}
+  tbody tr:last-child td{border-bottom:0}
+  .job-n{font-weight:700;font-size:13.5px;color:var(--brand)}
+  .job-s{font-size:11.5px;color:var(--sub);margin-top:2px}
+  .pay{font-weight:700;color:var(--warn);white-space:nowrap;font-size:13.5px}
+  .pay small{display:block;font-weight:400;color:var(--sub);font-size:11px;margin-top:2px}
+  .firm{font-size:12px;color:#3d5768;line-height:1.55}
+  .mini{display:inline-block;font-size:11px;padding:2px 7px;border-radius:5px;margin:0 4px 4px 0;
+    background:#eaf2f9;color:var(--brand2);white-space:nowrap}
+  .mini.gap{background:#fdf0e6;color:#b5610f}
+  .mini.none{background:#f1f5f8;color:#8fa3b3}
+  .lv{font-size:11px;padding:2px 7px;border-radius:5px;background:#eef4f0;color:#2d6a4f;white-space:nowrap}
+
+
+  /* 学习路线 */
+  .pri{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:700;white-space:nowrap}
+  .pri.p1{background:#fdeaea;color:#b02a2a}
+  .pri.p2{background:#fdf1e3;color:#a8600f}
+  .pri.p3{background:#eef3f7;color:#6b8497}
+  .bar{height:5px;border-radius:3px;background:#e8eef4;overflow:hidden;margin-bottom:3px}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,#1f6f8b,#0f9b8e);border-radius:3px}
+  .bar small,.cnt-s{font-size:10.5px;color:var(--sub)}
+  td.kpcell{font-size:12px;color:#2f4a5c;line-height:1.6}
+  tr.isgap td{background:#fffaf5!important}
+  tr.isgap td.kpcell{color:#8a4b12}
+  .lead{font-size:12.5px;color:#3d5768;background:#f4f8fb;border-radius:8px;padding:10px 14px;margin-bottom:12px;line-height:1.7}
+  .lead b{color:var(--brand)}
+  .mini.main{background:#e8f0fb;color:#1c4e8a}
+  td.cap{font-size:12px;color:#24404f;line-height:1.62}
+
+  /* 手机：表格转卡片 */
+  @media (max-width:720px){
+    header h1{font-size:19px}
+    .card{padding:16px}
+    table,thead,tbody,tr,td{display:block;width:100%}
+    thead{display:none}
+    tbody tr{border:1px solid var(--line);border-radius:12px;margin-bottom:12px;background:#fff!important;padding:4px 0}
+    tbody td{border:0;padding:7px 14px;display:flex;gap:10px}
+    tbody td::before{content:attr(data-l);flex:0 0 66px;font-size:11.5px;color:var(--sub);padding-top:2px}
+    tbody td.c-job::before,tbody td.c-pay::before{display:none}
+    tbody td.c-job{padding-top:12px}
+    tbody td.c-pay{padding-bottom:8px}
+    .sum .line2{font-size:15px}
+  }
+
+  /* 解读块 */
+  .notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:14px}
+  .note{background:#fff;border:1px solid var(--line);border-left:3px solid var(--brand2);border-radius:10px;padding:14px 16px}
+  .note.a{border-left-color:var(--accent)}
+  .note.g{border-left-color:var(--ok)}
+  .note b{display:block;font-size:13.5px;margin-bottom:6px}
+  .note p{font-size:12.5px;color:#3d5768}
+  .note p+p{margin-top:6px}
+
+  footer{margin-top:26px;font-size:12px;color:var(--sub);text-align:center;line-height:1.9}
+  footer a{color:var(--brand2);cursor:pointer;text-decoration:none;border-bottom:1px dotted #9db6c7}
+
+  /* 弹层 */
+  .mask{position:fixed;inset:0;background:rgba(10,25,38,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+  .mask.on{display:flex}
+  .modal{background:#fff;border-radius:14px;padding:22px;max-width:520px;width:100%;max-height:80vh;overflow:auto}
+  .modal h3{font-size:16px;margin-bottom:6px}
+  .modal p.d{font-size:12.5px;color:var(--sub);margin-bottom:14px}
+  .stat-row{display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:1px dashed #e6eef5}
+  .stat-row b{color:var(--brand)}
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#12293d;color:#fff;
+    padding:10px 18px;border-radius:22px;font-size:13px;opacity:0;transition:.25s;z-index:60;pointer-events:none}
+  .toast.on{opacity:1}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="h-top">
+      <h1>岗位匹配小助手</h1>
+      <span class="h-badge">《Java程序设计》课程组 · 就业方向匹配</span>
+    </div>
+    <p>回答 3 个问题，系统从岗位能力图谱的 <b id="kpi-n">66</b> 条岗位中，按城市、行业、岗位三个维度为你匹配，并告诉你还差哪几项能力。</p>
+    <div class="h-meta">
+      <div><b>66</b>条岗位记录</div>
+      <div><b>18</b>个城市</div>
+      <div><b>9</b>类行业方向</div>
+      <div><b>9</b>类岗位</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ===== 表单 ===== -->
+  <div class="card" id="form">
+    <div class="step">
+      <div class="step-h"><span class="num">1</span><b>毕业后你想在哪个城市工作？</b><em>可先看本地机会</em></div>
+      <div class="chips" id="c-city"></div>
+    </div>
+    <div class="step">
+      <div class="step-h"><span class="num">2</span><b>你想进入哪个行业？</b><em>不确定就选“不限”</em></div>
+      <div class="chips" id="c-grp"></div>
+    </div>
+    <div class="step">
+      <div class="step-h"><span class="num">3</span><b>你想做哪类岗位？</b><em>不看代码也行</em></div>
+      <div class="chips" id="c-cat"></div>
+    </div>
+    <div class="step">
+      <div class="step-h"><span class="num">4</span><b>你最看重什么？</b><em>可跳过，仅影响排序</em></div>
+      <div class="chips" id="c-pref"></div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-main" id="go" disabled>看看我能匹配什么</button>
+      <button class="btn btn-ghost" id="reset">清空重选</button>
+    </div>
+  </div>
+
+  <!-- ===== 结果 ===== -->
+  <div id="result">
+    <div class="sum">
+      <div class="line1" id="sum-l1"></div>
+      <div class="line2" id="sum-l2"></div>
+      <div class="tags" id="sum-tags"></div>
+    </div>
+
+    <div class="sec-t"><b id="t1">主要匹配岗位</b><small id="t1s"></small></div>
+    <table id="tb">
+      <thead><tr>
+        <th style="width:19%">岗位 / 匹配度</th><th style="width:9%">城市</th><th style="width:11%">应届起薪</th>
+        <th style="width:19%">代表企业</th><th style="width:29%">对应课程知识点（学什么）</th><th style="width:13%">要补的能力</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+
+    <div id="alt-box" style="display:none">
+      <div class="sec-t"><b>再放宽一点，还有这些</b><small id="alt-note"></small></div>
+      <table id="tb2">
+        <thead><tr>
+          <th style="width:19%">岗位 / 匹配度</th><th style="width:9%">城市</th><th style="width:11%">应届起薪</th>
+          <th style="width:19%">代表企业</th><th style="width:29%">对应课程知识点（学什么）</th><th style="width:13%">要补的能力</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="sec-t"><b>按岗位反推的学习清单</b><small>课程内知识点在前，未覆盖的缺口置底</small></div>
+    <div class="lead" id="road-lead"></div>
+    <table id="tb3">
+      <thead><tr>
+        <th style="width:7%">优先级</th><th style="width:20%">课程知识点</th>
+        <th style="width:32%">要练成什么能力</th><th style="width:14%">在哪学（情境·课次）</th>
+        <th style="width:13%">岗位需求度</th><th style="width:14%">怎么练（考核载体）</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="notes" id="notes"></div>
+
+    <div class="actions" style="margin-top:18px">
+      <button class="btn btn-main" id="copy">复制为表格（发微信/粘Excel）</button>
+      <button class="btn btn-ghost" id="again">重新填写</button>
+    </div>
+  </div>
+
+  <footer>
+    数据来源：《Java程序设计》岗位能力图谱与课程对接报告（66条岗位 · 2026年1月版）<br>
+    薪资为税前月薪参考值，不含年终奖；匹配结果仅作方向参考，具体以企业招聘为准<br>
+    <a id="teacher">教师查看班级汇总</a>
+  </footer>
+</div>
+
+<div class="mask" id="mask">
+  <div class="modal">
+    <h3>班级填写汇总</h3>
+    <p class="d">数据仅保存在本机浏览器，不上传服务器。共 <b id="rec-n">0</b> 条记录。</p>
+    <div id="stat"></div>
+    <div class="actions" style="margin-top:16px">
+      <button class="btn btn-main" id="csv">导出 CSV</button>
+      <button class="btn btn-ghost" id="close">关闭</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const D = {"rows":[{"ind":"互联网/电商","grp":"互联网与电商","cat":"开发类","job":"Java开发工程师（初级）","lvl":"初始岗位","city":"北京","tier":"一线","pay":"7000—9500","pay5":"13000—19000","firm":"京东、美团、快手、软通动力（驻场）","need":"能读懂错误提示并按任务单编写业务方法；能用数组/集合处理批量数据；会用断点定位空指针与数组越界","kp":"JDK安装与环境变量、变量与数据类型、if/switch与循环、一维/二维数组、冒泡排序、二分查找、方法定义与重载","code":"P1.1.1—P2.3.2","scene":"情境1（8学时）+情境2·第4周","gap":"岗位普遍要求集合框架与Spring Boot，本课程未覆盖（缺口G1、G5），需后者在《Java Web应用开发》补齐","sk":["P1.1.1","P1.1.2","P1.2.1","P1.3.1","P1.3.2","P2.1.1","P2.1.2","P2.2.1","P2.2.2","P2.2.3","P2.3.1","P2.3.2"],"gs":["G1","G5"],"pmin":8250.0},{"ind":"金融科技/银行IT","grp":"金融/银行/证券","cat":"开发类","job":"Java开发工程师（初级）","lvl":"初始岗位","city":"上海","tier":"一线","pay":"7500—10000","pay5":"14000—20000","firm":"中国银联、交通银行软件开发中心、平安科技、中电金信","need":"编码规范严格、注释与文档要求高；能按既有框架完成填空式开发并自查","kp":"命名规范、注释规范、方法拆分与职责单一、private封装与getter/setter、JavaBean规范","code":"P3.2.1、P5.1.1、P5.1.2","scene":"情境2·第5周，贯穿全部情境","gap":"金融行业最看重D5代码质量，现有考核中无独立观测点，建议增设5%代码质量评分","sk":["P3.2.1","P5.1.1","P5.1.2"],"gs":[],"pmin":8750.0},{"ind":"软件外包/IT服务","grp":"软件外包与IT服务","cat":"开发类","job":"Java开发工程师（初级）","lvl":"初始岗位","city":"广州","tier":"一线","pay":"6500—9000","pay5":"11000—16000","firm":"中软国际、软通动力、广电运通、佳都科技","need":"能快速接手他人代码、按接口文档联调；沟通配合度高、能按节点交付","kp":"类与对象、接口定义与实现、String常用API、package与import组织、包访问权限","code":"P1.2.1、P3.1.1、P3.4.1、P4.1.2","scene":"情境2·第7、10周，情境3·第15周","gap":"外包岗入职第一周即需Git与Maven（缺口G4、G5），课程完全未覆盖，建议课外强制要求","sk":["P1.2.1","P3.1.1","P3.4.1","P4.1.2"],"gs":["G4","G5"],"pmin":7750.0},{"ind":"互联网/本地生活","grp":"互联网与电商","cat":"开发类","job":"Java开发工程师（初级）","lvl":"初始岗位","city":"深圳","tier":"一线","pay":"7000—10000","pay5":"13000—19000","firm":"腾讯（生态/外包）、华为（OD）、大疆、货拉拉","need":"逻辑清晰，能完成批量数据统计与排序；抗压、能按里程碑交付阶段成果","kp":"数组遍历与统计、排序与查找、方法模块化、父类引用指向子类对象","code":"P2.2.1—P2.2.3、P2.3.1、P3.3.3","scene":"情境1（8学时）、情境2·第11周","gap":"大厂校招多要求本科及以上，高职以生态企业、外包与OD岗切入为现实路径","sk":["P2.2.1","P2.2.2","P2.2.3","P2.3.1","P3.3.3"],"gs":[],"pmin":8500.0},{"ind":"电商/云计算","grp":"互联网与电商","cat":"开发类","job":"Java开发工程师（初级）","lvl":"初始岗位","city":"杭州","tier":"新一线","pay":"6500—9500","pay5":"12000—18000","firm":"阿里巴巴（生态）、网易、恒生电子、同花顺","need":"能读懂需求并拆出功能点；会写增删改查类业务方法并自测边界","kp":"需求拆解三要素（输入/处理/输出）、方法参数与返回值、数组插入删除与去重、StringBuilder拼接","code":"P1.3.2、P2.2.3、P2.3.1、P4.1.3","scene":"情境1·第2周、情境2·第4周、情境3·第15周","gap":"恒生电子等金融软件企业常年招Java初级，岗位稳定、加班强度低于纯互联网","sk":["P1.3.2","P2.2.3","P2.3.1","P4.1.3"],"gs":[],"pmin":8000.0},{"ind":"政企信息化/信创","grp":"政务与公共事业","cat":"开发类","job":"Java开发工程师（初级）","lvl":"初始岗位","city":"成都","tier":"新一线","pay":"5500—8000","pay5":"10000—15000","firm":"神州信息、腾讯成都、四川长虹软件、创意信息","need":"能把业务对象抽象成类；代码可维护，能配合实施人员快速改需求","kp":"类与对象设计、封装、构造方法与重载、代码块与初始化、extends继承与super","code":"P3.1.1—P3.2.2、P3.3.1","scene":"情境2·第3—9周（16+16学时）","gap":"成都软件园Java岗位量大，起薪较一线低约30%，但生活成本低、留存率高","sk":["P3.1.1","P3.1.2","P3.1.3","P3.2.1","P3.2.2","P3.3.1"],"gs":[],"pmin":6750.0},{"ind":"政务/公共事业","grp":"政务与公共事业","cat":"开发类","job":"Java开发工程师（初级）","lvl":"初始岗位","city":"武汉","tier":"新一线","pay":"5500—8000","pay5":"10000—14000","firm":"金山办公（武汉）、烽火通信、斗鱼、光谷信息","need":"能完成手机号、邮箱、身份证等字段校验与文本解析；细致、能写清校验规则说明","kp":"String查找/截取/替换/分割、String与StringBuilder选用、字符类与量词、Pattern/Matcher、边界匹配","code":"P4.1.1—P4.2.3","scene":"情境3·第15—16周（12学时）","gap":"课程在正则上投入12学时，与本类岗位匹配度较好，但需从API罗列改为校验器任务","sk":["P4.1.1","P4.1.2","P4.1.3","P4.2.1","P4.2.2","P4.2.3"],"gs":[],"pmin":6750.0},{"ind":"软件/信息技术服务","grp":"软件外包与IT服务","cat":"开发类","job":"Java开发工程师（初级）","lvl":"初始岗位","city":"南京","tier":"新一线","pay":"5500—8000","pay5":"10000—14000","firm":"苏宁易购、焦点科技、南瑞集团、润和软件","need":"能独立搭环境跑通工程；会看异常堆栈定位抛出位置与调用链","kp":"JAVA_HOME与Path配置、IDE建工程与运行、编译与运行两步差别、编译错误阅读、异常堆栈阅读","code":"P1.1.1—P1.3.1、P6.1.2","scene":"情境1·第1周，贯穿","gap":"环境与排错能力是入职门槛，但课程仅以一句带过、学时未单列，建议第1周设独立任务单","sk":["P1.1.1","P1.1.2","P1.2.1","P1.3.1","P6.1.2"],"gs":[],"pmin":6750.0},{"ind":"工业软件/智能制造","grp":"制造/能源/汽车/农牧","cat":"开发类","job":"Java开发工程师（初级）","lvl":"初始岗位","city":"苏州","tier":"二线","pay":"5500—7500","pay5":"9000—13000","firm":"同程旅行、汇川技术、科大讯飞（苏州）、协鑫集团","need":"能处理设备、工单等结构化数据，编写统计报表逻辑；对数据准确性负责","kp":"二维数组、遍历求极值与平均值、冒泡/选择排序、顺序查找","code":"P2.2.1—P2.2.3","scene":"情境1·第1—2周（8学时）","gap":"工业软件对集合、IO、并发要求高，本课程只覆盖数据处理思维，需后续课程与实训补足","sk":["P2.2.1","P2.2.2","P2.2.3"],"gs":[],"pmin":6500.0},{"ind":"政务/民生服务","grp":"政务与公共事业","cat":"开发类","job":"Java开发工程师（初级）","lvl":"初始岗位","city":"西安","tier":"新一线","pay":"5000—7500","pay5":"9000—13000","firm":"博思软件、中软国际（西安）、华为西研所、法士特","need":"踏实规范，能按自查清单提交代码；能配合测试定位并修复缺陷并说明根因","kp":"编码规范、注释、方法职责单一、对外暴露必要接口、缺陷复现与回归验证","code":"P5.1.1—P5.2.2、P6.3.1","scene":"贯穿三个情境，第2/6/14周测验","gap":"西部政企项目多、招聘量大，是高职 Java 毕业生主要就业地之一","sk":["P5.1.1","P5.1.2","P5.2.1","P5.2.2","P6.3.1"],"gs":[],"pmin":6250.0},{"ind":"本地IT/政企服务","grp":"政务与公共事业","cat":"开发类","job":"Java开发工程师（初级）","lvl":"初始岗位","city":"济南","tier":"二线","pay":"4500—6500","pay5":"8000—12000","firm":"浪潮、中创软件、山大地纬、海尔卡奥斯","need":"能用数组与方法完成基础数据处理；能看懂需求文档与数据库字段说明","kp":"数组、方法、类与对象、字符串拼接与分割","code":"P2.2.1、P2.3.1、P3.1.1、P4.1.3","scene":"情境1、情境2、情境3","gap":"薪资贴近高职均值（麦可思2025届软件技术5273元/月），适合本地生源就业","sk":["P2.2.1","P2.3.1","P3.1.1","P4.1.3"],"gs":[],"pmin":5500.0},{"ind":"软件/信息服务","grp":"软件外包与IT服务","cat":"开发类","job":"Java开发工程师（初级）","lvl":"初始岗位","city":"郑州","tier":"二线","pay":"4200—6000","pay5":"7500—11000","firm":"中科九洲、河南思维、UU跑腿、汉威科技","need":"基本语法熟练、能照模板改写代码；学习能力与稳定性优先","kp":"流程控制、一维数组、类与对象基础、方法调用","code":"P2.1.1—P2.1.2、P2.2.1、P3.1.1","scene":"情境1（8学时）、情境2前半","gap":"以初级编码与实施岗为主，向上发展依赖《Java Web》《数据库》等后续课程","sk":["P2.1.1","P2.1.2","P2.2.1","P3.1.1"],"gs":[],"pmin":5100.0},{"ind":"互联网/电商","grp":"互联网与电商","cat":"测试类","job":"测试开发工程师（Java方向）","lvl":"初始岗位","city":"北京","tier":"一线","pay":"7000—9500","pay5":"12000—18000","firm":"京东、字节跳动、小米、Testin云测","need":"能读Java源码、按边界值设计用例；能据异常堆栈判断缺陷归属模块","kp":"代码阅读与逻辑推演、数组越界与字符串长度边界、异常堆栈、条件分支覆盖","code":"P1.3.1、P2.2.1、P6.1.2、P6.2.1","scene":"情境1—3阶段测验，第2/6/14周","gap":"岗位需JUnit与自动化脚本（缺口G3），课程仅P5.3.1“测试意识”L1，明显不足","sk":["P1.3.1","P2.2.1","P6.1.2","P6.2.1"],"gs":["G3"],"pmin":8250.0},{"ind":"金融科技","grp":"金融/银行/证券","cat":"测试类","job":"测试开发工程师（Java方向）","lvl":"初始岗位","city":"深圳","tier":"一线","pay":"7000—9500","pay5":"12000—18000","firm":"招银网络科技、平安科技、微众银行、神州信息","need":"用例设计完备、缺陷描述清晰；能复现问题并完成回归验证","kp":"正常值/边界值/异常值用例设计、缺陷单撰写、修复后回归验证","code":"P5.3.1、P6.3.1","scene":"情境1—3、课程设计（第17—19周）","gap":"金融测试岗对文档与沟通要求高，D5、D7 应在课程设计中显性考核","sk":["P5.3.1","P6.3.1"],"gs":[],"pmin":8250.0},{"ind":"软件测评/第三方检测","grp":"软件外包与IT服务","cat":"测试类","job":"测试开发工程师（Java方向）","lvl":"初始岗位","city":"南京","tier":"新一线","pay":"5500—8000","pay5":"9500—14000","firm":"中电科（南京）、润和软件、软通动力、赛宝实验室","need":"熟悉接口与数据结构，能写简单脚本辅助测试与数据构造","kp":"数组与集合（缺口G1）、字符串处理、正则匹配校验","code":"P2.2.1、P4.1.2、P4.2.2","scene":"情境1、情境3·第16周","gap":"第三方测评机构常年招聘、专科可入，建议在校期间取得软考程序员证书","sk":["P2.2.1","P4.1.2","P4.2.2"],"gs":[],"pmin":6750.0},{"ind":"金融核心系统","grp":"金融/银行/证券","cat":"开发类","job":"后端开发工程师（Java方向）","lvl":"发展岗位","city":"上海","tier":"一线","pay":"9000—13000（需1—2年经验）","pay5":"18000—28000","firm":"蚂蚁集团、中国银联、交通银行、汇添富基金","need":"能抽象接口、设计可扩展的类结构；理解多态与模板方法，能消除重复代码","kp":"接口与抽象类、抽象类与接口取舍、向上/向下转型、模板方法模式、static与final","code":"P3.3.3、P3.3.4、P3.4.1、P3.4.2","scene":"情境2·第10—11周（32学时中）","gap":"本课程只负责打基础，并发、分布式、中间件由后续课程与企业实训承担","sk":["P3.3.3","P3.3.4","P3.4.1","P3.4.2"],"gs":[],"pmin":11000.0},{"ind":"互联网后端","grp":"互联网与电商","cat":"开发类","job":"后端开发工程师（Java方向）","lvl":"发展岗位","city":"北京/杭州","tier":"一线/新一线","pay":"9000—13000（需1—2年经验）","pay5":"18000—30000","firm":"阿里巴巴、美团、京东、滴滴","need":"具备并发与分布式基础、能设计数据模型；熟练使用集合与异常处理","kp":"面向对象建模、内部类、集合框架（缺口G1）、异常处理（缺口G2）","code":"P3.1.1—P3.4.2，G1、G2","scene":"情境2（48学时）为主体","gap":"集合与异常是本课程最大能力缺口，直接制约学生向该岗位迁移，建议各增4学时","sk":["P3.1.1","P3.1.2","P3.1.3","P3.2.1","P3.2.2","P3.3.1","P3.3.2","P3.3.3","P3.3.4","P3.4.1","P3.4.2"],"gs":[],"pmin":11000.0},{"ind":"消费电子/智能硬件","grp":"制造/能源/汽车/农牧","cat":"开发类","job":"安卓开发工程师（初级）","lvl":"迁移岗位","city":"深圳","tier":"一线","pay":"7000—10000","pay5":"13000—19000","firm":"华为、OPPO、vivo、传音控股","need":"熟悉类与继承、能组织界面事件逻辑；会用接口做模块解耦","kp":"类与对象、继承与重写、接口与实现、成员内部类与静态内部类、String处理","code":"P3.1.1、P3.3.1、P3.4.1、P3.5.2","scene":"情境2·第3—10周、第12周","gap":"需Android SDK与Kotlin，本课程仅提供Java语法与面向对象基础，属打底性质","sk":["P3.1.1","P3.3.1","P3.4.1","P3.5.2"],"gs":[],"pmin":8500.0},{"ind":"汽车电子/车机系统","grp":"制造/能源/汽车/农牧","cat":"开发类","job":"安卓开发工程师（初级）","lvl":"迁移岗位","city":"上海","tier":"一线","pay":"7000—9500","pay5":"13000—18000","firm":"蔚来、小鹏、斑马智行、博泰车联网","need":"代码规范、能按模块接口对接；调试能力强，能定位偶现问题","kp":"封装与JavaBean、接口、断点与单步调试、多线程（缺口）","code":"P3.2.1、P3.4.1、P6.1.1","scene":"情境2、贯穿全部情境","gap":"车机方向增长快但对并发有要求，需第二课堂或选修课补足","sk":["P3.2.1","P3.4.1","P6.1.1"],"gs":[],"pmin":8250.0},{"ind":"移动应用外包","grp":"软件外包与IT服务","cat":"开发类","job":"安卓开发工程师（初级）","lvl":"迁移岗位","city":"成都","tier":"新一线","pay":"5500—8000","pay5":"9500—14000","firm":"中软国际、博彦科技、tap4fun、尼毕鲁","need":"能按UI稿实现交互逻辑、按周交付；对输入校验与异常兜底有意识","kp":"类与对象、方法封装、字符串与正则校验、异常处理（缺口G2）","code":"P3.1.1、P2.3.1、P4.2.3","scene":"情境2·第3—7周、情境3·第16周","gap":"外包项目周期短，交付意识（D7）比技术深度更被看重","sk":["P3.1.1","P2.3.1","P4.2.3"],"gs":[],"pmin":6750.0},{"ind":"互联网/数据服务","grp":"互联网与电商","cat":"数据与报表类","job":"大数据开发工程师（入门）","lvl":"迁移岗位","city":"杭州","tier":"新一线","pay":"6500—9000","pay5":"13000—20000","firm":"阿里云、网易数帆、每日互动、恒生电子","need":"熟悉批量数据处理与文本清洗；能把清洗规则写成可复用方法","kp":"数组与集合思维（G1）、String分割与替换、正则表达式提取、排序与统计","code":"P2.2.1—P2.2.3、P4.1.2、P4.2.2","scene":"情境1（8学时）、情境3（12学时）","gap":"需SQL与Hadoop/Spark生态，本课程只覆盖数据处理思维与文本清洗","sk":["P2.2.1","P2.2.2","P2.2.3","P4.1.2","P4.2.2"],"gs":[],"pmin":7750.0},{"ind":"政务大数据","grp":"政务与公共事业","cat":"数据与报表类","job":"大数据开发工程师（入门）","lvl":"迁移岗位","city":"贵阳","tier":"二线","pay":"5000—7000","pay5":"9000—13000","firm":"云上贵州、白山云、满帮集团、易鲸捷","need":"数据敏感度高、能按规则做数据治理；能写日志解析与字段抽取逻辑","kp":"数组遍历、字符串分割与替换、正则分组提取、边界匹配","code":"P2.2.1、P4.1.2、P4.2.2","scene":"情境1、情境3·第16周","gap":"西部数据产业政策支持，专科层次就业机会较多，可作为区域就业导向","sk":["P2.2.1","P4.1.2","P4.2.2"],"gs":[],"pmin":6000.0},{"ind":"政企软件/管理软件","grp":"政务与公共事业","cat":"实施与顾问类","job":"软件实施与技术支持工程师","lvl":"初始岗位（补充）","city":"全国（省会为主）","tier":"二线","pay":"4500—6500","pay5":"8000—12000","firm":"用友、金蝶、东软、浪潮","need":"能部署环境、读懂日志与报错、与客户沟通需求；Java基础够改配置与脚本","kp":"环境变量配置、错误日志与堆栈阅读、String处理、类与对象基础","code":"P1.1.1、P1.3.1、P4.1.2","scene":"情境1·第1周、情境3·第15周","gap":"高职软件类约15%—20%毕业生实际流向实施/运维岗，属对口但非纯开发，课程应保留此出口","sk":["P1.1.1","P1.3.1","P4.1.2"],"gs":[],"pmin":5500.0},{"ind":"医疗健康信息化","grp":"医疗与教育","cat":"开发类","job":"Java开发工程师（初级）","lvl":"初始岗位","city":"广州","tier":"一线","pay":"6000—8500","pay5":"11000—15000","firm":"东软医疗、金域医学、卫宁健康、创业慧康","need":"业务理解力强、代码稳定、能长期维护既有系统；对数据校验与异常兜底敏感","kp":"类与对象、封装、字符串处理、异常处理（缺口G2）、调试与缺陷修复","code":"P3.1.1—P3.2.2、P4.1.2、P6.2.1","scene":"情境2·第3—7周、贯穿","gap":"医疗信息化项目周期长、人员流动低，适合稳定性强的学生，可作校企合作方向","sk":["P3.1.1","P3.1.2","P3.1.3","P3.2.1","P3.2.2","P4.1.2","P6.2.1"],"gs":[],"pmin":7250.0},{"ind":"教育培训/在线教育","grp":"医疗与教育","cat":"开发类","job":"Java开发工程师（初级）","lvl":"初始岗位","city":"北京","tier":"一线","pay":"6500—9000","pay5":"11000—16000","firm":"好未来、新东方（技术中心）、猿辅导、超星集团","need":"能快速实现业务功能并自测；有代码质量与规范意识，能参与代码评审","kp":"方法设计与重载、数组与集合、字符串处理、编码规范自查、代码互评","code":"P2.3.1、P2.3.2、P2.2.1、P5.1.1、P7.2.2","scene":"情境1、情境2、贯穿","gap":"行业波动较大，建议作为备选方向，不单独设置课程内容","sk":["P2.3.1","P2.3.2","P2.2.1","P5.1.1","P7.2.2"],"gs":[],"pmin":7750.0},{"ind":"央企/军工信息化","grp":"央企/军工/信创","cat":"开发类","job":"Java开发工程师（初级）","lvl":"初始岗位","city":"北京","tier":"一线","pay":"8000—11000","pay5":"14000—20000","firm":"中国软件（中软）、太极股份、航天信息、中科软科技","need":"需政审与保密意识，代码与文档规范严格；能按国标写接口文档、按评审意见改代码","kp":"类与对象、封装、String处理、编码与注释规范、需求拆解","code":"P3.1.1—P3.2.2、P4.1.2、P5.1.1、P1.3.2","scene":"情境2·第3—7周、情境3、贯穿","gap":"起薪高于互联网同级岗，但多要求本科，专科以劳务派遣或外包切入；信创适配经验是加分项","sk":["P3.1.1","P3.1.2","P3.1.3","P3.2.1","P3.2.2","P4.1.2","P5.1.1","P1.3.2"],"gs":[],"pmin":9500.0},{"ind":"运营商IT/通信","grp":"通信/云计算/数据中心","cat":"开发类","job":"Java开发工程师（初级）","lvl":"初始岗位","city":"北京","tier":"一线","pay":"7000—9500","pay5":"12000—17000","firm":"中国移动信息技术中心、中国联通软件研究院、中国电信云网运营部","need":"能按规范开发业务模块并做数据核对；沟通顺畅、能配合割接上线","kp":"方法设计、数组与统计、字符串处理、异常堆栈阅读","code":"P2.3.1、P2.2.1、P4.1.2、P6.1.2","scene":"情境1、情境2·第4周、情境3","gap":"岗位稳定、福利好，社招多于校招，实习转正是主要入口","sk":["P2.3.1","P2.2.1","P4.1.2","P6.1.2"],"gs":[],"pmin":8250.0},{"ind":"证券/基金IT","grp":"金融/银行/证券","cat":"开发类","job":"Java开发工程师（初级）","lvl":"初始岗位","city":"上海","tier":"一线","pay":"8000—11000","pay5":"15000—22000","firm":"国泰君安、华泰证券、汇添富基金、恒生电子（上海）","need":"逻辑严密、能处理金额精度问题；对数据准确性零容忍","kp":"数据类型与精度、封装、字符串格式化、边界校验","code":"P2.1.1、P3.2.1、P4.1.2、P4.2.3","scene":"情境2·第5周、情境3·第15—16周","gap":"薪资高、加班少于互联网，但多要求本科；恒生电子等金融软件商对专科较友好","sk":["P2.1.1","P3.2.1","P4.1.2","P4.2.3"],"gs":[],"pmin":9500.0},{"ind":"外资/合资研发中心","grp":"软件外包与IT服务","cat":"开发类","job":"Java开发工程师（初级）","lvl":"初始岗位","city":"上海","tier":"一线","pay":"8000—12000","pay5":"15000—22000","firm":"SAP、IBM、埃森哲、野村信息（上海）","need":"英语读写过关，能读英文技术文档与报错；遵守国际团队代码规范","kp":"英文报错信息阅读、命名与注释规范、代码评审","code":"P1.3.1、P5.1.1、P5.1.2、P7.2.2","scene":"贯穿全部情境","gap":"对英语要求高，专科需以作品与英语证明补足；驻场外包（如野村信息）是常见入口","sk":["P1.3.1","P5.1.1","P5.1.2","P7.2.2"],"gs":[],"pmin":10000.0},{"ind":"跨境电商","grp":"互联网与电商","cat":"开发类","job":"Java开发工程师（初级）","lvl":"初始岗位","city":"深圳","tier":"一线","pay":"7500—10500","pay5":"13000—19000","firm":"希音SHEIN、虾皮Shopee、傲基科技、通拓科技","need":"能处理订单与库存等批量数据、多币种格式化；响应快、能跟大促节奏","kp":"数组与集合、排序查找、String格式化与分割","code":"P2.2.1—P2.2.3、P4.1.2、P4.1.3","scene":"情境1·第1—2周、情境3·第15周","gap":"深圳跨境电商岗位多、对专科开放度高，英语基础好者优先","sk":["P2.2.1","P2.2.2","P2.2.3","P4.1.2","P4.1.3"],"gs":[],"pmin":9000.0},{"ind":"游戏/数字娱乐","grp":"互联网与电商","cat":"开发类","job":"Java开发工程师（初级）","lvl":"初始岗位","city":"广州","tier":"一线","pay":"7000—9500","pay5":"13000—18000","firm":"网易游戏、多益网络、三七互娱、星辉游戏","need":"数据结构与算法基础扎实；能读懂他人代码并快速改需求","kp":"数组与算法、继承与多态、集合（缺口G1）","code":"P2.2.2、P3.3.1—P3.3.3、G1","scene":"情境1·第2周、情境2·第8—11周","gap":"游戏行业对算法要求偏高；Java岗少于C++/Go岗，建议同步刷题","sk":["P2.2.2","P3.3.1","P3.3.2","P3.3.3"],"gs":[],"pmin":8250.0},{"ind":"智能汽车软件","grp":"制造/能源/汽车/农牧","cat":"开发类","job":"Java/安卓开发工程师（初级）","lvl":"迁移岗位","city":"广州","tier":"一线","pay":"7500—10500","pay5":"13000—19000","firm":"小鹏汽车、广汽研究院、文远知行、德赛西威（惠州）","need":"能写稳定可靠的模块代码；理解异常处理与并发基础","kp":"继承与接口、异常处理（缺口G2）、调试与缺陷修复","code":"P3.3.1、P3.4.1、P6.1.1、G2","scene":"情境2·第8—11周","gap":"车厂多要求本科，专科可切入Tier1供应商与测试岗","sk":["P3.3.1","P3.4.1","P6.1.1"],"gs":[],"pmin":9000.0},{"ind":"电子政务/数字政府","grp":"政务与公共事业","cat":"开发类","job":"Java开发工程师（初级）","lvl":"初始岗位","city":"呼和浩特","tier":"三线","pay":"4500—6500","pay5":"7000—10000","firm":"内蒙古凌动信息科技、内蒙古华讯软件、欣荣惠信息技术、内蒙古云鲸科技","need":"能按政务需求做门户与审批流模块；能驻客户现场沟通并写文档","kp":"类与对象、封装、String处理、正则校验、异常堆栈","code":"P3.1.1—P3.2.2、P4.1.2、P4.2.3、P6.1.2","scene":"情境2·第3—7周、情境3·第15—16周","gap":"呼市本地主力岗位，多要求大专以上并接受应届；薪资约为一线55%—65%，生活成本低、可本地就业","sk":["P3.1.1","P3.1.2","P3.1.3","P3.2.1","P3.2.2","P4.1.2","P4.2.3","P6.1.2"],"gs":[],"pmin":5500.0},{"ind":"乳业/农牧产业数字化","grp":"制造/能源/汽车/农牧","cat":"开发类","job":"Java开发/系统运维工程师","lvl":"初始岗位","city":"呼和浩特","tier":"三线","pay":"4500—6500","pay5":"7500—11000","firm":"伊利集团、蒙牛乳业、蒙草生态、内蒙古赛科星","need":"能维护ERP/MES周边系统，写数据统计与报表逻辑","kp":"数组统计、二维数组、排序查找、String处理","code":"P2.2.1—P2.2.3、P4.1.2","scene":"情境1·第1—2周、情境3","gap":"甲方IT部门稳定、福利好，招聘少而集中，实习与校企合作是主要入口","sk":["P2.2.1","P2.2.2","P2.2.3","P4.1.2"],"gs":[],"pmin":5500.0},{"ind":"能源电力信息化","grp":"制造/能源/汽车/农牧","cat":"实施与顾问类","job":"Java开发/实施工程师","lvl":"初始岗位","city":"鄂尔多斯","tier":"三线","pay":"5000—7000","pay5":"8000—12000","firm":"内蒙古电力（集团）、伊泰集团、鄂尔多斯集团、中煤蒙大","need":"能读懂业务单据、写结算与统计逻辑；能出差驻场","kp":"数组与统计、方法设计、String分割、断点调试","code":"P2.2.1、P2.3.1、P4.1.2、P6.1.1","scene":"情境1、情境2·第4周","gap":"区内薪资较高的方向；项目周期长、外包商驻场多（如中科软、朗新科技）","sk":["P2.2.1","P2.3.1","P4.1.2","P6.1.1"],"gs":[],"pmin":6000.0},{"ind":"钢铁冶金/装备制造信息化","grp":"制造/能源/汽车/农牧","cat":"实施与顾问类","job":"软件实施与开发工程师","lvl":"初始岗位","city":"包头","tier":"三线","pay":"4200—6000","pay5":"7000—10000","firm":"包钢集团、内蒙古一机集团、北方重工、内蒙古豪德天沐科技","need":"能部署系统、改配置与报表，能到车间现场对接业务","kp":"环境变量配置、日志与堆栈阅读、String处理、类与对象基础","code":"P1.1.1、P1.3.1、P4.1.2、P3.1.1","scene":"情境1·第1周、情境3","gap":"制造业IT以实施运维为主、开发为辅；适合能出差、动手能力强的学生","sk":["P1.1.1","P1.3.1","P4.1.2","P3.1.1"],"gs":[],"pmin":5100.0},{"ind":"数据中心/算力运维","grp":"通信/云计算/数据中心","cat":"运维类","job":"运维开发/技术支持工程师","lvl":"初始岗位","city":"乌兰察布","tier":"三线","pay":"4500—6500","pay5":"7500—11000","firm":"华为云数据中心（乌兰察布）、中国电信云计算内蒙古信息园、快手数据中心、和林格尔新区算力企业","need":"熟悉Linux命令与脚本，能用Java写运维小工具；能接受倒班值守","kp":"环境变量与命令行、String处理、日志与错误阅读","code":"P1.1.1、P1.3.1、P4.1.2","scene":"情境1·第1周、贯穿","gap":"东数西算枢纽带来大量运维岗、开发岗较少；适合求稳定、能倒班的学生","sk":["P1.1.1","P1.3.1","P4.1.2"],"gs":[],"pmin":5500.0},{"ind":"金融/征信（信创环境）","grp":"金融/银行/证券","cat":"开发类","job":"Java开发工程师（初级）","lvl":"初始岗位","city":"包头","tier":"三线","pay":"4200—6000","pay5":"7000—9500","firm":"内蒙古征信服务有限公司、蒙商银行、内蒙古银行、金谷农商银行","need":"能在信创环境（统信OS＋达梦数据库）下开发；代码规范、数据准确","kp":"类与对象、封装、String与正则、编码规范","code":"P3.1.1—P3.2.2、P4.2.3、P5.1.1","scene":"情境2·第3—7周、情境3","gap":"信创改造带来岗位增量、专科可入；薪资不高但稳定，适合本地长期发展","sk":["P3.1.1","P3.1.2","P3.1.3","P3.2.1","P3.2.2","P4.2.3","P5.1.1"],"gs":[],"pmin":5100.0},{"ind":"软件测试/质量保障","grp":"软件外包与IT服务","cat":"测试类","job":"软件测试工程师（功能测试）","lvl":"初始岗位","city":"北京","tier":"一线","pay":"6000—8500","pay5":"11000—16000","firm":"中软国际、博彦科技、文思海辉、东软集团、北京软通动力","need":"能按需求文档设计测试用例，覆盖正常值、边界值、异常值；能提交要素齐全的缺陷单并跟踪到关闭；会写清晰的测试记录","kp":"数组遍历与统计、String处理、边界值设计、异常堆栈阅读","code":"P2.2.1、P4.1.2、P5.3.1、P6.1.2","scene":"情境1·第2周、情境3·第15周","gap":"对专科开放度最高的IT入口岗；G3（JUnit单元测试）未覆盖，接口测试需在Java Web补","sk":["P2.2.1","P4.1.2","P5.3.1","P6.1.2"],"gs":["G3"],"pmin":7250.0},{"ind":"软件外包/IT服务","grp":"软件外包与IT服务","cat":"售后与客户成功类","job":"技术支持工程师（软件厂商）","lvl":"初始岗位","city":"南京","tier":"新一线","pay":"5000—7000","pay5":"8500—12000","firm":"南京擎天科技、朗新科技、南瑞继保、江苏润和","need":"能远程或现场排查客户环境问题，读日志定位原因，给客户讲清处理过程并写服务记录","kp":"环境变量配置、编译与运行错误阅读、日志与堆栈、String处理","code":"P1.1.1、P1.3.1、P6.1.2、P5.1.2","scene":"情境1·第1周、贯穿","gap":"岗位量大、出差多、晋升靠业务理解；建议在校期间练熟环境配置与日志排查","sk":["P1.1.1","P1.3.1","P6.1.2","P5.1.2"],"gs":[],"pmin":6000.0},{"ind":"管理软件/ERP","grp":"企业软件与数字化","cat":"实施与顾问类","job":"ERP实施顾问（助理）","lvl":"初始岗位","city":"上海","tier":"一线","pay":"6000—8500","pay5":"12000—18000","firm":"用友网络、金蝶软件、浪潮通软、鼎捷软件、上海汉得信息","need":"能按业务蓝图配置系统参数、做基础数据初始化、给客户做操作培训并写实施文档","kp":"类与对象建模、封装、数组统计、业务实体与数据表映射","code":"P3.1.1、P3.2.1、P2.2.1、P7.2.1","scene":"情境2·第3—7周、课程设计","gap":"无需深厚编程即可入行、薪资上限靠业务积累；课程缺SQL与业务流程内容，建议选修","sk":["P3.1.1","P3.2.1","P2.2.1","P7.2.1"],"gs":[],"pmin":7250.0},{"ind":"企业数字化/SaaS","grp":"企业软件与数字化","cat":"新兴技术类","job":"低代码应用开发工程师","lvl":"初始岗位","city":"杭州","tier":"新一线","pay":"5500—8000","pay5":"10000—15000","firm":"钉钉（宜搭生态服务商）、简道云、泛微网络、致远互联、杭州数云","need":"能用低代码平台搭表单、流程与看板；能写脚本处理业务规则与数据校验；能对接平台开放接口","kp":"流程控制、数组与集合、String处理、表单校验规则","code":"P2.1.2、P2.2.2、P4.2.3、P5.2.1","scene":"情境1、情境3·第16周","gap":"岗位增长快、对专科友好；G1（集合）缺口会影响列表与批量数据处理","sk":["P2.1.2","P2.2.2","P4.2.3","P5.2.1"],"gs":["G1"],"pmin":6750.0},{"ind":"企业数字化/BI","grp":"企业软件与数字化","cat":"数据与报表类","job":"报表开发工程师（BI）","lvl":"初始岗位","city":"北京","tier":"一线","pay":"6500—9000","pay5":"12000—18000","firm":"帆软软件、观远数据、永洪科技、北京君信微科、亿信华辰","need":"能用FineReport/FineBI完成数据准备、图表与大屏；能写SQL取数并核对指标口径；能按业务方需求改版","kp":"二维数组与统计、排序查找、String分割、日期处理","code":"P2.2.1、P2.2.2、P4.1.2、P3.5.1","scene":"情境1·第1—2周、情境3","gap":"专科可入、需求稳定；课程无SQL与BI工具内容，需在Java Web或选修课补齐","sk":["P2.2.1","P2.2.2","P4.1.2","P3.5.1"],"gs":[],"pmin":7750.0},{"ind":"流程自动化/RPA","grp":"企业软件与数字化","cat":"新兴技术类","job":"RPA开发工程师","lvl":"初始岗位","city":"深圳","tier":"一线","pay":"6000—9000","pay5":"11000—16000","firm":"影刀RPA、来也科技、艺赛旗、实在智能、深圳法大大","need":"能把重复业务流程拆成可自动化步骤，用RPA工具＋脚本实现，做异常兜底与运行监控，写流程说明文档","kp":"流程控制、字符串与正则提取、异常处理、文件读写","code":"P2.1.2、P4.2.2、P6.1.2、P2.3.1","scene":"情境1、情境3·第16周","gap":"大专占比超九成（企查查口径），适合细心、懂业务的学生；G2（异常处理）是上线运行的刚需缺口","sk":["P2.1.2","P4.2.2","P6.1.2","P2.3.1"],"gs":["G2"],"pmin":7500.0},{"ind":"云计算/IT基础设施","grp":"通信/云计算/数据中心","cat":"运维类","job":"应用运维工程师（Java应用）","lvl":"初始岗位","city":"北京","tier":"一线","pay":"6500—9500","pay5":"12000—18000","firm":"阿里云生态服务商、神州数码、华胜天成、中科软、中电科太极","need":"能把Java应用部署到Linux服务器并启停；能看日志定位故障、写巡检与备份脚本；能配合发布与回滚","kp":"JDK环境配置、包组织、日志与堆栈阅读、命令行","code":"P1.1.1、P1.2.1、P1.3.1、P6.1.2","scene":"情境1·第1周、情境2·第7周","gap":"倒班与值班较多但门槛低；G5（Maven打包部署）缺口会直接影响能否独立发布","sk":["P1.1.1","P1.2.1","P1.3.1","P6.1.2"],"gs":["G5"],"pmin":8000.0},{"ind":"数据服务/数据库","grp":"企业软件与数字化","cat":"数据与报表类","job":"数据库管理助理（SQL开发）","lvl":"初始岗位","city":"广州","tier":"一线","pay":"6000—8500","pay5":"11000—16000","firm":"赛意信息、云和恩墨、爱可生、中国电信广东公司、广州品高软件","need":"能写增删改查与分组统计SQL；能做数据核对与去重清洗；能配合做简单索引与慢查询排查","kp":"数据类型与精度、数组与集合、二维数组统计、String处理","code":"P2.1.1、P2.2.1、P4.1.2、P5.2.1","scene":"情境1、情境2","gap":"课程未设数据库内容，需在Java Web的JDBC模块补；适合逻辑严密、坐得住的学生","sk":["P2.1.1","P2.2.1","P4.1.2","P5.2.1"],"gs":[],"pmin":7250.0},{"ind":"互联网/软件服务","grp":"互联网与电商","cat":"开发类","job":"前端开发工程师（Vue方向）","lvl":"迁移岗位","city":"成都","tier":"新一线","pay":"5500—8000","pay5":"10000—15000","firm":"腾讯成都、字节跳动成都、中电科蓉威、成都数之联、国铁吉讯","need":"能做页面布局与列表渲染，完成接口联调、表单校验与错误提示；能按设计稿还原并兼容主流浏览器","kp":"流程控制、数组遍历与过滤、对象建模、String与JSON处理","code":"P2.1.2、P2.2.1、P3.1.1、P4.1.2","scene":"情境1、情境2","gap":"Java 转前端是常见路径、专科需求量大；G1（集合）缺口会影响数组与列表处理","sk":["P2.1.2","P2.2.1","P3.1.1","P4.1.2"],"gs":["G1"],"pmin":6750.0},{"ind":"智能终端/操作系统生态","grp":"企业软件与数字化","cat":"新兴技术类","job":"鸿蒙应用开发工程师","lvl":"迁移岗位","city":"深圳","tier":"一线","pay":"7000—10000","pay5":"13000—20000","firm":"华为生态伙伴、软通动力、中软国际、拓维信息、江苏润开鸿","need":"能用ArkTS/Java写页面与业务逻辑，完成数据请求与本地存储；能上架应用市场并跟进审核问题整改","kp":"类与对象、继承与接口、数组与集合、异常处理","code":"P3.1.1、P3.3.1、P3.4.1、P2.2.1","scene":"情境2·第3—11周","gap":"目前少数明确接受统招大专的开发岗，南昌等地应届5—8K、一线可达10K+；G1、G2 缺口需补","sk":["P3.1.1","P3.3.1","P3.4.1","P2.2.1"],"gs":["G1","G2"],"pmin":8500.0},{"ind":"人工智能应用","grp":"企业软件与数字化","cat":"新兴技术类","job":"AI应用开发工程师（助理）","lvl":"初始岗位","city":"北京","tier":"一线","pay":"7000—10000","pay5":"13000—20000","firm":"百度智能云生态、科大讯飞、第四范式、中科闻歌、北京智谱生态企业","need":"能调用大模型API完成问答、摘要、分类功能；能设计提示词并对输出做校验与兜底；能处理超时与限流","kp":"接口定义与实现、String与JSON处理、异常与超时处理、数组与集合","code":"P3.4.1、P4.1.2、P6.1.2、P2.2.1","scene":"情境2·第10周、情境3","gap":"新岗位、薪资高于传统初级开发，但要求自学能力；G1、G2 缺口在此被直接放大","sk":["P3.4.1","P4.1.2","P6.1.2","P2.2.1"],"gs":["G1","G2"],"pmin":8500.0},{"ind":"电子政务/数字政府","grp":"政务与公共事业","cat":"售后与客户成功类","job":"技术支持工程师（驻场）","lvl":"初始岗位","city":"呼和浩特","tier":"三线","pay":"4000—5500","pay5":"6500—9000","firm":"内蒙古凌动信息科技、内蒙古华讯软件、欣荣惠信息技术、内蒙古云鼎科技","need":"能驻客户单位做系统操作指导、故障报修与数据核对；能写清楚问题记录并跟进闭环；沟通耐心","kp":"环境配置、日志与报错阅读、String处理、文档与记录规范","code":"P1.1.1、P1.3.1、P4.1.2、P5.1.2","scene":"情境1、贯穿","gap":"呼市本地岗位量大、门槛低于开发岗、可本地稳定就业；后续可转实施顾问或开发","sk":["P1.1.1","P1.3.1","P4.1.2","P5.1.2"],"gs":[],"pmin":4750.0},{"ind":"乳业/农牧数字化","grp":"制造/能源/汽车/农牧","cat":"数据与报表类","job":"报表与数据专员（BI）","lvl":"初始岗位","city":"呼和浩特","tier":"三线","pay":"4000—5500","pay5":"6500—9000","firm":"伊利集团、蒙牛乳业、蒙草生态、内蒙古赛科星、内蒙古正大","need":"能用Excel/BI做产销存与成本报表，核对数据口径并按时出周报月报；能发现数据异常并追因","kp":"二维数组与统计、排序查找、日期处理、String分割","code":"P2.2.1、P2.2.2、P3.5.1、P4.1.2","scene":"情境1·第1—2周","gap":"甲方岗位稳定、不加班、适合本地女生就业；技术成长慢，需自学SQL与BI工具","sk":["P2.2.1","P2.2.2","P3.5.1","P4.1.2"],"gs":[],"pmin":4750.0},{"ind":"教育培训/IT培训","grp":"医疗与教育","cat":"培训类","job":"编程讲师（助教）","lvl":"初始岗位","city":"全国（省会为主）","tier":"二线","pay":"4500—6500","pay5":"7000—10000","firm":"传智播客（黑马）、达内教育、童程童美、编程猫、各地青少年科技中心","need":"能把基础语法与算法思路讲清楚，带班答疑、批改作业、跟家长沟通学习进度；能按教案复现课堂","kp":"语法与流程控制、数组与算法、类与对象、调试演示","code":"P2.1.1、P2.2.2、P3.1.1、P6.1.1","scene":"贯穿","gap":"入行快、可边教边学，但需补教学法与表达训练；适合表达能力强、愿意继续深造的学生","sk":["P2.1.1","P2.2.2","P3.1.1","P6.1.1"],"gs":[],"pmin":5500.0},{"ind":"云计算/IT基础设施","grp":"通信/云计算/数据中心","cat":"运维类","job":"Linux系统运维工程师","lvl":"初始岗位","city":"北京","tier":"一线","pay":"6000—9000","pay5":"12000—18000","firm":"神州数码、中科软、华胜天成、青云科技、北京首都在线","need":"能独立安装配置Linux并部署Nginx/Tomcat；能用Shell写巡检与备份脚本；能看系统日志定位CPU、内存、磁盘类故障；能配Zabbix/Prometheus监控告警","kp":"环境变量与命令行、JDK部署、包组织、日志与堆栈阅读","code":"P1.1.1、P1.2.1、P1.3.1、P6.1.2","scene":"情境1·第1周、情境2·第7周","gap":"倒班与值班多、门槛低，是专科进入基础设施方向的主通道；G5（Maven/打包部署）缺口会影响能否独立发布","sk":["P1.1.1","P1.2.1","P1.3.1","P6.1.2"],"gs":["G5"],"pmin":7500.0},{"ind":"云计算/云服务","grp":"通信/云计算/数据中心","cat":"运维类","job":"云运维工程师（阿里云/华为云）","lvl":"初始岗位","city":"杭州","tier":"新一线","pay":"6500—9500","pay5":"13000—20000","firm":"阿里云生态服务商、华为云生态伙伴、浙江大华、恒生电子、杭州数梦工场","need":"能在云平台开通与配置ECS/RDS/SLB；能按监控指标做扩容与告警处置；能写脚本做批量运维；能配合做成本优化","kp":"命令行与环境配置、日志阅读、String处理与脚本、包组织","code":"P1.1.1、P1.3.1、P4.1.2、P1.2.1","scene":"情境1·第1周、情境3","gap":"考取HCIA-Cloud/ACP等证书可显著提薪；适合愿意持续考证的学生","sk":["P1.1.1","P1.3.1","P4.1.2","P1.2.1"],"gs":[],"pmin":8000.0},{"ind":"数据中心/IDC","grp":"通信/云计算/数据中心","cat":"运维类","job":"IDC机房运维工程师","lvl":"初始岗位","city":"苏州","tier":"新一线","pay":"5000—7000","pay5":"8000—12000","firm":"上海云州数据、万国数据、世纪互联、苏州国科数据中心、润泽科技","need":"能按巡检表完成服务器与网络设备巡检；能完成服务器上下架、系统安装与线路调试；能处理机房告警并记录","kp":"Linux命令行、硬件与网络基础认知、日志阅读、文档记录规范","code":"P1.1.1、P1.3.1、P5.1.2、P6.1.2","scene":"情境1·第1周、贯穿","gap":"7×24 值班、能接受倒班即可入行；部分岗位需低压电工证，建议在校考取","sk":["P1.1.1","P1.3.1","P5.1.2","P6.1.2"],"gs":[],"pmin":6000.0},{"ind":"企业IT/IT服务","grp":"软件外包与IT服务","cat":"运维类","job":"桌面运维工程师（Helpdesk）","lvl":"初始岗位","city":"上海","tier":"一线","pay":"5000—7000","pay5":"8000—11000","firm":"联想服务、神州数码、上海蓝盟网络、各大型企业IT共享中心","need":"能处理办公电脑与打印机故障、系统重装、账号与权限开通；能用远程工具支持；能按工单时限响应并回访","kp":"操作系统与驱动基础、命令行、办公软件与文档、沟通记录","code":"P1.1.1、P4.1.2、P5.1.2、P7.2.1","scene":"情境1·第1周、贯穿","gap":"门槛最低、可快速就业，但技术成长有限；适合作为入行跳板，1—2 年内转运维或实施","sk":["P1.1.1","P4.1.2","P5.1.2","P7.2.1"],"gs":[],"pmin":6000.0},{"ind":"互联网/云原生","grp":"互联网与电商","cat":"运维类","job":"SRE助理/监控运维工程师","lvl":"迁移岗位","city":"深圳","tier":"一线","pay":"7000—10000","pay5":"14000—22000","firm":"腾讯云生态、顺丰科技、货拉拉、深圳法大大、深信服","need":"能搭建并维护监控告警体系；能看日志与链路追踪定位线上问题；能写自动化脚本与发布脚本；能值on-call","kp":"日志与堆栈分析、String与脚本处理、接口与调用关系、异常处理","code":"P6.1.2、P4.1.2、P3.4.1、P2.3.1","scene":"情境2·第10周、情境3","gap":"薪资高于传统运维但要求高；G2（异常处理）与 G1（集合）缺口需在Java Web与自学中补齐","sk":["P6.1.2","P4.1.2","P3.4.1","P2.3.1"],"gs":["G1","G2"],"pmin":8500.0},{"ind":"通信/网络集成","grp":"通信/云计算/数据中心","cat":"运维类","job":"网络运维工程师（数通方向）","lvl":"初始岗位","city":"郑州","tier":"二线","pay":"4500—6500","pay5":"8000—12000","firm":"新华三、锐捷网络、河南联通集成商、郑州向心力通信、中移建设河南分公司","need":"能配置交换机与路由器基础功能（VLAN、静态路由、NAT）；能排查链路与丢包问题；能按割接方案执行并回退","kp":"命令行操作、日志与告警阅读、网络基础、变更记录规范","code":"P1.1.1、P1.3.1、P5.1.2、P7.3.1","scene":"情境1·第1周、贯穿","gap":"需考华为/H3C认证，持证起薪明显提高；适合偏好硬件与网络的学生","sk":["P1.1.1","P1.3.1","P5.1.2","P7.3.1"],"gs":[],"pmin":5500.0},{"ind":"政企软件/ERP","grp":"政务与公共事业","cat":"售前类","job":"售前技术支持工程师（助理）","lvl":"初始岗位","city":"北京","tier":"一线","pay":"6000—8500","pay5":"12000—20000","firm":"用友网络、东华软件、太极股份、东方国信、北京超图软件","need":"能写方案的技术章节与产品说明；能做产品演示并答客户技术问题；能配合销售做需求调研与投标答疑","kp":"需求拆解（输入-处理-输出）、类与对象建模、文档与注释规范、演示表达","code":"P1.3.2、P3.1.1、P5.1.2、P7.2.1","scene":"情境2·第3周、课程设计","gap":"高职起点多为售前助理，1—2 年后独立负责客户；需较强表达与文档能力，建议在校多练汇报","sk":["P1.3.2","P3.1.1","P5.1.2","P7.2.1"],"gs":[],"pmin":7250.0},{"ind":"政企信息化/信创","grp":"政务与公共事业","cat":"售前类","job":"解决方案助理（政企/信创）","lvl":"初始岗位","city":"成都","tier":"新一线","pay":"5500—7500","pay5":"10000—16000","firm":"华为生态伙伴、长虹佳华、四方伟业、中电科三十所、成都索贝数码","need":"能按客户行业整理解决方案素材；能做竞品与配置对比表；能配合完成POC环境搭建与测试记录","kp":"需求拆解、环境配置、文档规范、数据整理与对比","code":"P1.3.2、P1.1.1、P5.1.2、P2.2.1","scene":"情境1、情境2","gap":"信创改造带来大量售前需求；需补国产OS与数据库知识，课程目前未覆盖","sk":["P1.3.2","P1.1.1","P5.1.2","P2.2.1"],"gs":[],"pmin":6500.0},{"ind":"软件外包/系统集成","grp":"软件外包与IT服务","cat":"售前类","job":"投标技术支持（标书工程师）","lvl":"初始岗位","city":"南京","tier":"新一线","pay":"5000—7000","pay5":"9000—14000","firm":"南瑞集团、江苏联通集成、南京熊猫信息、擎天科技、江苏鸿信系统集成","need":"能按招标文件拆解技术条款并逐条响应；能整理资质与案例材料；能把控标书格式与递交时限","kp":"需求拆解、文档排版与规范、细致核对、时限管理","code":"P1.3.2、P5.1.2、P7.1.1、P7.3.1","scene":"贯穿、课程设计","gap":"工作强度集中在投标期、需极细心；对编程要求低，适合文字能力强的学生","sk":["P1.3.2","P5.1.2","P7.1.1","P7.3.1"],"gs":[],"pmin":6000.0},{"ind":"电子政务/数字政府","grp":"政务与公共事业","cat":"售前类","job":"售前工程师（政企方向）","lvl":"初始岗位","city":"呼和浩特","tier":"三线","pay":"4500—6500","pay5":"8000—12000","firm":"内蒙古凌动信息科技、内蒙古华讯软件、浪潮内蒙古、内蒙古电力信息通信","need":"能向客户讲清系统功能与实施路径；能写政务项目方案与汇报材料；能配合做需求调研与原型确认","kp":"需求拆解、类与对象建模、文档规范、汇报表达","code":"P1.3.2、P3.1.1、P5.1.2、P7.2.1","scene":"情境2·第3周、课程设计","gap":"本地售前岗常由实施顾问转岗；起薪不高但成长快，适合表达好、愿跑客户的学生","sk":["P1.3.2","P3.1.1","P5.1.2","P7.2.1"],"gs":[],"pmin":5500.0},{"ind":"管理软件/ERP","grp":"企业软件与数字化","cat":"售后与客户成功类","job":"售后技术支持工程师（软件）","lvl":"初始岗位","city":"广州","tier":"一线","pay":"5500—8000","pay5":"10000—15000","firm":"用友广东、金蝶广东、赛意信息、广州品高软件、广州中望龙腾","need":"能远程或现场处理客户系统报错、数据异常与权限问题；能写处理报告并回访；能判断何时升级二线","kp":"日志与堆栈阅读、环境配置、String与数据处理、服务记录规范","code":"P6.1.2、P1.1.1、P4.1.2、P5.1.2","scene":"情境1、情境3","gap":"岗位量大、出差少、稳定性好；一次解决率是考核核心，需练熟排错套路","sk":["P6.1.2","P1.1.1","P4.1.2","P5.1.2"],"gs":[],"pmin":6750.0},{"ind":"企业数字化/SaaS","grp":"企业软件与数字化","cat":"售后与客户成功类","job":"客户成功专员（SaaS）","lvl":"初始岗位","city":"杭州","tier":"新一线","pay":"6000—9000","pay5":"11000—18000","firm":"钉钉、有赞、微盟、杭州数云、光云科技","need":"能带客户完成系统上线与培训；能分析客户使用数据发现流失风险；能推动续费与增购；能整理客户反馈给产品","kp":"数据统计与分析、文档与培训材料、沟通协作、需求拆解","code":"P2.2.1、P5.1.2、P7.2.1、P1.3.2","scene":"情境1、课程设计","gap":"不看代码看沟通与数据敏感度；适合性格外向、愿意做客户经营的学生，收入含续费提成","sk":["P2.2.1","P5.1.2","P7.2.1","P1.3.2"],"gs":[],"pmin":7500.0},{"ind":"软件外包/IT服务","grp":"软件外包与IT服务","cat":"售后与客户成功类","job":"服务台工程师（ITIL一线）","lvl":"初始岗位","city":"大连","tier":"二线","pay":"4500—6000","pay5":"7500—11000","firm":"简柏特、埃森哲大连、IBM大连、东软大连、大连华信","need":"能按ITIL流程受理工单、分级派单并跟踪闭环；能用中英日文记录与沟通；能维护知识库条目","kp":"故障描述与记录规范、办公软件、英文报错阅读、沟通表达","code":"P5.1.2、P1.3.1、P7.2.1、P7.3.1","scene":"情境1、贯穿","gap":"对日/对欧美外包基地，日语或英语好可显著提薪；适合语言能力强的学生","sk":["P5.1.2","P1.3.1","P7.2.1","P7.3.1"],"gs":[],"pmin":5250.0},{"ind":"能源电力/政企驻场","grp":"制造/能源/汽车/农牧","cat":"售后与客户成功类","job":"驻场运维与支持工程师","lvl":"初始岗位","city":"鄂尔多斯","tier":"三线","pay":"4500—6000","pay5":"7000—10000","firm":"内蒙古电力信息通信、伊泰集团、中科软驻场项目组、朗新科技","need":"能常驻客户现场做系统巡检、故障报修与操作指导；能配合升级与割接；能维护客户关系并反馈需求","kp":"环境配置、日志阅读、文档与记录、沟通协作","code":"P1.1.1、P6.1.2、P5.1.2、P7.2.1","scene":"情境1、贯穿","gap":"区内岗位多、补贴与差旅费可观、可本地就业；技术深度有限，需自学向运维或实施转型","sk":["P1.1.1","P6.1.2","P5.1.2","P7.2.1"],"gs":[],"pmin":5250.0}],"skills":{"P1.1.1":{"area":"D1 开发环境与工具应用","unit":"U1.1 环境搭建","req":"能独立安装JDK、配置JAVA_HOME与Path，用命令行验证java/javac版本","lv":"L2","kp":"JDK安装、环境变量配置、命令行验证","scene":"情境1·第1周","tgt":"6、8","carrier":"作业：环境配置截图"},"P1.1.2":{"area":"D1 开发环境与工具应用","unit":"U1.1 环境搭建","req":"能在IDE中新建工程、编写并运行首个程序，说明编译与运行两步的差别","lv":"L2","kp":"IDE工程创建、源码编译与运行流程","scene":"情境1·第1周","tgt":"6、8","carrier":"作业：首个程序运行截图"},"P1.2.1":{"area":"D1 开发环境与工具应用","unit":"U1.2 工程与包组织","req":"能按package/import规范组织多包源码，说明不同包之间类的访问规则","lv":"L2","kp":"package与import、包访问权限","scene":"情境2·第7周","tgt":"6、8","carrier":"实训：多包工程结构检查"},"P1.3.1":{"area":"D1 开发环境与工具应用","unit":"U1.3 错误信息阅读","req":"能读懂编译错误提示，指出错误所在行与错误类型并自行修正","lv":"L2","kp":"编译错误提示阅读、常见语法错误类型","scene":"贯穿三个情境","tgt":"8、9","carrier":"过程性：错误修改记录"},"P1.3.2":{"area":"D1 开发环境与工具应用","unit":"U1.3 错误信息阅读","req":"能按任务单拆解功能点，列出输入、处理、输出三要素","lv":"L2","kp":"需求拆解三要素（输入/处理/输出）","scene":"贯穿（各情境任务单）","tgt":"10","carrier":"过程性：功能点拆解表"},"P2.1.1":{"area":"D2 程序逻辑与数据处理","unit":"U2.1 语法与流程控制","req":"能正确声明变量、选用数据类型、使用运算符完成计算，避免类型转换错误","lv":"L2","kp":"变量与数据类型、运算符、类型转换","scene":"承接先修课（情境1复习）","tgt":"6","carrier":"作业"},"P2.1.2":{"area":"D2 程序逻辑与数据处理","unit":"U2.1 语法与流程控制","req":"能用if/switch与for/while/do-while实现分支与循环业务逻辑","lv":"L2","kp":"if/switch分支、for/while/do-while循环","scene":"承接先修课（情境1复习）","tgt":"6","carrier":"作业"},"P2.2.1":{"area":"D2 程序逻辑与数据处理","unit":"U2.2 数组与算法","req":"能声明、创建、初始化一维与二维数组，并遍历访问元素","lv":"L2","kp":"一维/二维数组声明与初始化、length与遍历","scene":"情境1·第1周","tgt":"6","carrier":"实训：统计模块"},"P2.2.2":{"area":"D2 程序逻辑与数据处理","unit":"U2.2 数组与算法","req":"能实现冒泡/选择等排序与顺序/二分查找，说明其适用条件","lv":"L2","kp":"冒泡排序、选择排序、顺序查找、二分查找","scene":"情境1·第2周","tgt":"6、9","carrier":"期中测验＋实训"},"P2.2.3":{"area":"D2 程序逻辑与数据处理","unit":"U2.2 数组与算法","req":"能完成数组元素的插入、删除与去重，正确处理长度变化与索引位移","lv":"L3","kp":"数组插入、删除、去重、索引位移与长度控制","scene":"情境1·第2周","tgt":"9","carrier":"实训：库存/成绩管理"},"P2.3.1":{"area":"D2 程序逻辑与数据处理","unit":"U2.3 方法与模块化","req":"能定义带参方法并正确使用返回值，说明值传递对基本类型与引用类型的差异","lv":"L2","kp":"方法定义、参数传递、返回值、值传递机制","scene":"情境2·第4周","tgt":"7","carrier":"作业＋实训"},"P2.3.2":{"area":"D2 程序逻辑与数据处理","unit":"U2.3 方法与模块化","req":"能使用方法重载与递归解决同类问题，控制递归出口","lv":"L3","kp":"方法重载、递归与递归出口","scene":"情境2·第4周","tgt":"7","carrier":"作业"},"P3.1.1":{"area":"D3 面向对象建模与设计","unit":"U3.1 类与对象","req":"能从业务描述中识别实体，写出包含属性与方法的类定义","lv":"L2","kp":"类的定义、属性与方法、对象创建","scene":"情境2·第3周","tgt":"7","carrier":"实训：实体类设计"},"P3.1.2":{"area":"D3 面向对象建模与设计","unit":"U3.1 类与对象","req":"能创建对象并调用其成员，画出对象在内存中的引用关系","lv":"L2","kp":"对象创建、成员调用、引用类型内存模型","scene":"情境2·第6周","tgt":"7","carrier":"作业：引用关系图"},"P3.1.3":{"area":"D3 面向对象建模与设计","unit":"U3.1 类与对象","req":"能区分成员变量与局部变量的作用域与生命周期","lv":"L2","kp":"成员变量与局部变量、作用域、生命周期","scene":"情境2·第3周","tgt":"7","carrier":"作业"},"P3.2.1":{"area":"D3 面向对象建模与设计","unit":"U3.2 封装与规范","req":"能用private+getter/setter封装属性，按JavaBean规范编写实体类","lv":"L2","kp":"private封装、getter/setter、JavaBean规范","scene":"情境2·第5周","tgt":"7","carrier":"实训＋代码规范检查"},"P3.2.2":{"area":"D3 面向对象建模与设计","unit":"U3.2 封装与规范","req":"能用构造方法（含重载）与代码块控制对象的初始化过程","lv":"L2","kp":"构造方法、构造方法重载、代码块与初始化顺序","scene":"情境2·第5周","tgt":"7","carrier":"作业＋期中测验"},"P3.3.1":{"area":"D3 面向对象建模与设计","unit":"U3.3 继承与多态","req":"能用extends建立继承关系，说明子类对象实例化过程与super/this的调用次序","lv":"L2","kp":"extends继承、super与this、实例化过程","scene":"情境2·第8—9周","tgt":"7、8","carrier":"实训：多类型员工体系"},"P3.3.2":{"area":"D3 面向对象建模与设计","unit":"U3.3 继承与多态","req":"能按业务需要重写父类方法，并用static/final控制共享与不可变","lv":"L2","kp":"方法重写、static、final","scene":"情境2·第8周","tgt":"7、8","carrier":"作业"},"P3.3.3":{"area":"D3 面向对象建模与设计","unit":"U3.3 继承与多态","req":"能用父类引用指向子类对象，完成向上转型与安全的向下转型","lv":"L3","kp":"多态、向上转型、向下转型与instanceof","scene":"情境2·第11周","tgt":"9","carrier":"课程设计"},"P3.3.4":{"area":"D3 面向对象建模与设计","unit":"U3.3 继承与多态","req":"能用抽象类与模板方法模式抽取流程骨架，消除重复代码","lv":"L3","kp":"抽象类、抽象方法、模板方法模式","scene":"情境2·第11周","tgt":"9","carrier":"课程设计"},"P3.4.1":{"area":"D3 面向对象建模与设计","unit":"U3.4 接口与抽象","req":"能定义接口并由多个类实现，按业务差异给出不同实现","lv":"L3","kp":"接口定义、接口实现、面向接口编程","scene":"情境2·第10周","tgt":"8、9","carrier":"课程设计"},"P3.4.2":{"area":"D3 面向对象建模与设计","unit":"U3.4 接口与抽象","req":"能在具体场景中说明接口与抽象类的取舍依据（多继承语义 vs 代码复用）","lv":"L3","kp":"接口与抽象类的区别与取舍","scene":"情境2·第10周","tgt":"9","carrier":"课程设计答辩"},"P3.5.1":{"area":"D3 面向对象建模与设计","unit":"U3.5 常用类库","req":"能正确使用Object、包装类、Math、Random、Date/Calendar等常用类完成常见处理","lv":"L2","kp":"Object与toString/equals、包装类与装箱、Math/Random、Date与Calendar","scene":"情境2·第13周","tgt":"7","carrier":"作业"},"P3.5.2":{"area":"D3 面向对象建模与设计","unit":"U3.5 常用类库","req":"能使用成员内部类与静态内部类组织关联紧密的辅助类","lv":"L1","kp":"成员内部类、静态内部类","scene":"情境2·第12周","tgt":"7","carrier":"作业"},"P4.1.1":{"area":"D4 字符串与正则文本处理","unit":"U4.1 字符串处理","req":"能说明String不可变性与字符串常量池机制，解释相关运行结果","lv":"L2","kp":"String不可变性、字符串常量池、==与equals","scene":"情境3·第15周","tgt":"6、7","carrier":"期中测验"},"P4.1.2":{"area":"D4 字符串与正则文本处理","unit":"U4.1 字符串处理","req":"能熟练使用查找、截取、替换、分割、比较等常用API完成文本处理","lv":"L2","kp":"String查找/截取/替换/分割/比较API、trim与大小写转换","scene":"情境3·第15周","tgt":"7","carrier":"实训：文本处理工具类"},"P4.1.3":{"area":"D4 字符串与正则文本处理","unit":"U4.1 字符串处理","req":"能根据拼接频次与线程要求选用String、StringBuilder或StringBuffer","lv":"L2","kp":"StringBuilder与StringBuffer、拼接性能差异","scene":"情境3·第15周","tgt":"8","carrier":"实训＋性能对比记录"},"P4.2.1":{"area":"D4 字符串与正则文本处理","unit":"U4.2 正则应用","req":"能编写字符类、量词、分组、边界匹配等基础正则表达式","lv":"L2","kp":"字符类、量词、分组、边界匹配符","scene":"情境3·第16周","tgt":"6","carrier":"作业：正则编写"},"P4.2.2":{"area":"D4 字符串与正则文本处理","unit":"U4.2 正则应用","req":"能用Pattern/Matcher与String的正则方法完成匹配、提取、替换与校验","lv":"L3","kp":"Pattern与Matcher、matches/split/replaceAll","scene":"情境3·第16周","tgt":"8、9","carrier":"实训：校验工具类"},"P4.2.3":{"area":"D4 字符串与正则文本处理","unit":"U4.2 正则应用","req":"能为手机号、邮箱、身份证等真实字段设计校验规则并说明其边界","lv":"L3","kp":"手机号/邮箱/身份证/学号校验规则、边界与异常输入","scene":"情境3·第16周","tgt":"9","carrier":"课程设计＋校验规则说明"},"P5.1.1":{"area":"D5 代码质量与工程规范","unit":"U5.1 编码规范","req":"能按命名规范命名类、方法、变量、常量，代码缩进与空行一致","lv":"L2","kp":"命名规范、缩进与空行、常量定义","scene":"贯穿三个情境","tgt":"1、6","carrier":"过程性：规范自查清单"},"P5.1.2":{"area":"D5 代码质量与工程规范","unit":"U5.1 编码规范","req":"能为类、方法、关键逻辑写清用途、参数与返回值注释","lv":"L2","kp":"类注释、方法注释、参数与返回值说明","scene":"贯穿三个情境","tgt":"1、5","carrier":"过程性：注释抽检"},"P5.2.1":{"area":"D5 代码质量与工程规范","unit":"U5.2 可维护性","req":"能拆分过长方法、消除重复代码，使单个方法职责单一","lv":"L2","kp":"方法抽取与重构、消除重复代码、单一职责","scene":"情境2、情境3","tgt":"1、9","carrier":"课程设计：重构说明"},"P5.2.2":{"area":"D5 代码质量与工程规范","unit":"U5.2 可维护性","req":"能对外只暴露必要接口，修改内部实现不影响调用方","lv":"L2","kp":"访问修饰符、接口隔离、封装边界","scene":"情境2","tgt":"9","carrier":"课程设计"},"P5.3.1":{"area":"D5 代码质量与工程规范","unit":"U5.3 测试意识","req":"能为方法设计正常值、边界值与异常值用例并手工验证","lv":"L1","kp":"测试用例设计（正常/边界/异常）、手工验证","scene":"情境1—3阶段测验","tgt":"5、10","carrier":"测验：用例设计题"},"P6.1.1":{"area":"D6 调试测试与问题解决","unit":"U6.1 调试技能","req":"能在IDE中设置断点、单步执行、观察变量与调用栈","lv":"L2","kp":"断点设置、单步执行、变量观察、调用栈查看","scene":"情境1·第2周起贯穿","tgt":"8、9","carrier":"实训：调试记录"},"P6.1.2":{"area":"D6 调试测试与问题解决","unit":"U6.1 调试技能","req":"能阅读异常堆栈，定位抛出异常的类型、位置与调用链","lv":"L2","kp":"异常堆栈结构、异常类型识别、调用链追读","scene":"贯穿三个情境","tgt":"3、9","carrier":"测验：排错题"},"P6.2.1":{"area":"D6 调试测试与问题解决","unit":"U6.2 缺陷定位","req":"能识别并修复数组越界、空指针、死循环、类型转换等常见缺陷","lv":"L2","kp":"数组越界、空指针、死循环、类型转换异常","scene":"第2、6、14周测验","tgt":"3、9","carrier":"测验＋缺陷修复记录"},"P6.3.1":{"area":"D6 调试测试与问题解决","unit":"U6.3 修复验证","req":"修复后能回归验证相关功能，说明缺陷根因而非仅改表象","lv":"L2","kp":"回归验证、缺陷根因分析、缺陷单记录","scene":"贯穿三个情境","tgt":"3、10","carrier":"课程设计：缺陷单"},"P7.1.1":{"area":"D7 团队协作与职业素养","unit":"U7.1 任务管理","req":"能接受任务单，制定个人周计划并按里程碑交付","lv":"L2","kp":"任务单执行、周计划制定、里程碑交付","scene":"课程设计（第17—19周）","tgt":"10","carrier":"课程设计：周计划表"},"P7.2.1":{"area":"D7 团队协作与职业素养","unit":"U7.2 协作沟通","req":"能在3人小组中承担明确分工，完成代码合并与接口对接","lv":"L2","kp":"小组分工、代码合并、接口对接","scene":"课程设计（第17—19周）","tgt":"4、10","carrier":"课程设计：分工表"},"P7.2.2":{"area":"D7 团队协作与职业素养","unit":"U7.2 协作沟通","req":"能对他人的代码给出具体、可执行的评审意见并接受反馈","lv":"L1","kp":"代码评审要点、反馈表达","scene":"情境2、情境3","tgt":"4","carrier":"过程性：互评表"},"P7.3.1":{"area":"D7 团队协作与职业素养","unit":"U7.3 职业态度","req":"遵守提交时限与编码约定，对交付质量负责","lv":"L2","kp":"提交时限、编码约定、交付质量责任","scene":"贯穿三个情境","tgt":"1、5","carrier":"过程性：提交记录"}},"order":["P1.1.1","P1.1.2","P1.2.1","P1.3.1","P1.3.2","P2.1.1","P2.1.2","P2.2.1","P2.2.2","P2.2.3","P2.3.1","P2.3.2","P3.1.1","P3.1.2","P3.1.3","P3.2.1","P3.2.2","P3.3.1","P3.3.2","P3.3.3","P3.3.4","P3.4.1","P3.4.2","P3.5.1","P3.5.2","P4.1.1","P4.1.2","P4.1.3","P4.2.1","P4.2.2","P4.2.3","P5.1.1","P5.1.2","P5.2.1","P5.2.2","P5.3.1","P6.1.1","P6.1.2","P6.2.1","P6.3.1","P7.1.1","P7.2.1","P7.2.2","P7.3.1"],"cities":["上海","乌兰察布","全国（省会为主）","包头","北京","北京/杭州","南京","呼和浩特","大连","广州","成都","杭州","武汉","济南","深圳","苏州","西安","贵阳","郑州","鄂尔多斯"],"groups":["互联网与电商","金融/银行/证券","政务与公共事业","软件外包与IT服务","制造/能源/汽车/农牧","通信/云计算/数据中心","医疗与教育","企业软件与数字化","央企/军工/信创"],"cats":["开发类","测试类","数据与报表类","运维类","实施与顾问类","售前类","售后与客户成功类","新兴技术类","培训类"]};
+const INNER = ["呼和浩特","包头","鄂尔多斯","乌兰察布"];
+const GAPMAP = {G1:"集合框架",G2:"异常处理",G3:"JUnit单元测试",G4:"Git协作",G5:"Maven构建"};
+const state = {city:null, grp:null, cat:null, pref:null};
+let lastRows = [];
+
+/* ---------- 渲染选项 ---------- */
+const CITY_OPTS = ["北京","上海","深圳","广州","杭州","成都","南京","武汉","西安","苏州","郑州","济南","大连",["内蒙古","内蒙古任一城市","呼和浩特等4城"],"呼和浩特","包头","鄂尔多斯","乌兰察布","不限"];
+const PREF = [["pay","起薪高一点"],["stable","稳定、少折腾"],["home","离家近（内蒙古）"],["grow","成长快、以后好跳"]];
+
+function buildChips(box, items, key, fmt){
+  box.innerHTML = "";
+  items.forEach(it=>{
+    const [val,label,sub] = Array.isArray(it)? it : [it,it,null];
+    const b = document.createElement("button");
+    b.className = "chip"; b.type="button";
+    b.innerHTML = label + (sub? `<small>${sub}</small>`:"");
+    b.onclick = ()=>{
+      state[key] = val;
+      [...box.children].forEach(c=>c.classList.remove("on"));
+      b.classList.add("on");
+      document.getElementById("go").disabled = !(state.city && state.grp && state.cat);
+    };
+    box.appendChild(b);
+  });
+}
+buildChips(document.getElementById("c-city"), CITY_OPTS, "city");
+buildChips(document.getElementById("c-grp"),
+  [["不限","不限 / 都可以"]].concat(D.groups.map(g=>[g, g, `${D.rows.filter(r=>r.grp===g).length} 条岗位`])), "grp");
+buildChips(document.getElementById("c-cat"),
+  [["不限","还不确定"]].concat(D.cats.map(c=>[c, c, `${D.rows.filter(r=>r.cat===c).length} 条`])), "cat");
+buildChips(document.getElementById("c-pref"), PREF, "pref");
+document.getElementById("kpi-n").textContent = D.rows.length;
+
+/* ---------- 匹配 ---------- */
+function cityScore(r, city){
+  if(city==="不限") return 0;
+  const cs = r.city.split("/");
+  if(city==="内蒙古") return INNER.some(c=>cs.includes(c)) ? 45 : (r.city.includes("全国")?18:0);
+  if(cs.includes(city)) return 45;
+  if(r.city.includes("全国")) return 18;
+  return 0;
+}
+function prefScore(r, pref){
+  if(!pref) return 0;
+  let s=0;
+  if(pref==="pay"){ s += r.pmin>=8000?10 : r.pmin>=7000?6 : r.pmin>=6000?3 : 0; }
+  if(pref==="stable"){ if(["运维类","售后与客户成功类","实施与顾问类"].includes(r.cat)) s+=9; if(r.lvl.includes("初始")) s+=3; }
+  if(pref==="home"){ if(INNER.some(c=>r.city.includes(c))) s+=12; }
+  if(pref==="grow"){ if(["开发类","新兴技术类","数据与报表类"].includes(r.cat)) s+=9; if(/迁移|发展/.test(r.lvl)) s+=4; }
+  return s;
+}
+function run(a){
+  const out=[];
+  for(const r of D.rows){
+    let s=0; const why=[];
+    const cs = cityScore(r, a.city);
+    if(a.city!=="不限"){ if(!cs) continue; s+=cs; why.push(cs===45?"目标城市":"全国可投"); }
+    if(a.grp!=="不限"){ if(r.grp!==a.grp) continue; s+=25; why.push("行业对口"); }
+    if(a.cat!=="不限"){ if(r.cat!==a.cat) continue; s+=30; why.push("岗位对口"); }
+    s += prefScore(r, a.pref);
+    if(r.lvl.includes("初始")) s+=2;
+    out.push({r, s, why});
+  }
+  return out.sort((x,y)=> y.s-x.s || y.r.pmin-x.r.pmin);
+}
+function gapsOf(r){
+  const g=[...new Set((r.gap||"").match(/G[1-5]/g)||[])];
+  return g.map(x=>({code:x, name:GAPMAP[x]}));
+}
+
+/* ---------- 结果渲染 ---------- */
+function cellRow(x, maxScore){
+  const r=x.r, gs=gapsOf(r);
+  const ratio = Math.round(x.s / maxScore * 100);
+  const lvTxt = ratio>=85? "高度匹配" : ratio>=60? "较匹配" : "可考虑";
+  return `<tr>
+    <td class="c-job" data-l="岗位">
+      <div class="job-n">${r.job}</div>
+      <div class="job-s">${r.cat} · ${r.lvl}</div>
+      <div style="margin-top:5px">
+        <span class="mini">${lvTxt}</span>${x.why.map(w=>`<span class="mini">${w}</span>`).join("")}
+      </div>
+    </td>
+    <td data-l="城市">${r.city}<div class="job-s">${r.tier}</div></td>
+    <td class="c-pay" data-l="起薪">
+      <div class="pay">${r.pay}<small>3—5年 ${r.pay5}</small></div>
+    </td>
+    <td class="firm" data-l="企业">${r.firm}</td>
+    <td class="kpcell" data-l="课程知识点">${r.kp}
+      <div class="job-s" style="margin-top:4px">${domainsOf(r).join(" · ")}</div>
+    </td>
+    <td data-l="要补">
+      ${gs.length? gs.map(g=>`<span class="mini gap">${g.name}</span>`).join("") : `<span class="mini none">暂无缺口</span>`}
+      <div class="job-s" style="margin-top:4px">共 ${r.sk.length} 个能力点</div>
+    </td>
+  </tr>`;
+}
+
+function domainsOf(r){
+  const out=[];
+  (r.sk||[]).forEach(c=>{
+    const a=(D.skills[c]||{}).area; if(!a) return;
+    const n=AREA_SHORT[a.slice(0,2)]||a;
+    if(!out.includes(n)) out.push(n);
+  });
+  return out.length? out : ["通用开发能力"];
+}
+
+/* ---------- 学习清单 ---------- */
+const AREA_SHORT = {"D1":"环境与工具","D2":"程序逻辑","D3":"面向对象","D4":"字符串正则","D5":"代码规范","D6":"调试测试","D7":"团队协作"};
+function areaTag(area){
+  const d = (area||"").slice(0,2);
+  return AREA_SHORT[d] || area || "";
+}
+const GAPINFO = {
+  G1:{name:"集合框架（List/Map/Set）", where:"《Java Web》M6 MyBatis / 自学", how:"用 ArrayList、HashMap 重写课程的数组统计任务", lv:"未覆盖",
+      req:"能用 List、Map、Set 完成批量数据的增删查改，并说清 ArrayList 与 LinkedList、HashMap 各自适合什么场景"},
+  G2:{name:"异常处理（try-catch-finally）", where:"《Java Web》M4 JDBC 事务", how:"给课程设计加统一异常兜底，并记录日志", lv:"未覆盖",
+      req:"能用 try-catch-finally 捕获并处理异常，能自定义异常类，避免一个错误导致整个程序崩溃"},
+  G3:{name:"JUnit 单元测试", where:"自学 +《Java Web》接口测试", how:"为工具类补 10 个用例（正常/边界/异常值）", lv:"未覆盖",
+      req:"能为一个方法写出正常值、边界值、异常值三类测试用例，并读懂断言失败的提示信息"},
+  G4:{name:"Git 版本协作", where:"课程设计小组任务", how:"每次提交写清 commit message，练一次分支合并", lv:"未覆盖",
+      req:"能完成克隆、提交、推送、拉取与分支合并，写清每次提交说明，能处理简单的代码冲突"},
+  G5:{name:"Maven 构建与依赖管理", where:"《Java Web》M8 工程化", how:"把课程设计改成 Maven 工程，打成 jar 包部署", lv:"未覆盖",
+      req:"能用 Maven 引入依赖、构建并打包工程，看懂 pom.xml 与标准目录结构"}
+};
+function roadmap(rows){
+  const cnt={}, gcnt={};
+  rows.forEach(x=>{
+    (x.r.sk||[]).forEach(c=> cnt[c]=(cnt[c]||0)+1);
+    (x.r.gs||[]).forEach(g=> gcnt[g]=(gcnt[g]||0)+1);
+  });
+  const items=[];
+  Object.entries(cnt).forEach(([c,n])=>{
+    const sk=D.skills[c]; if(!sk) return;
+    items.push({type:"skill", code:c, n, kp:sk.kp, req:sk.req, lv:sk.lv, scene:sk.scene, carrier:sk.carrier, area:sk.area, dom:(sk.area||"").slice(0,2)});
+  });
+  Object.entries(gcnt).forEach(([g,n])=>{
+    const gi=GAPINFO[g]; if(!gi) return;
+    items.push({type:"gap", code:g, n, kp:gi.name, req:gi.req, lv:gi.lv, scene:gi.where, carrier:gi.how, area:"课程缺口"});
+  });
+  const idx = c => { const i=D.order.indexOf(c); return i<0? 99 : i; };
+  items.forEach(it=> it.ratio = it.n / (rows.length||1));
+  items.sort((a,b)=>{
+    if(a.type!==b.type) return a.type==="skill"? -1 : 1;   // 课程内知识点优先，缺口置底
+    return b.n-a.n || idx(a.code)-idx(b.code);             // 频次降序，同频按课程顺序
+  });
+  return items;
+}
+function renderRoad(rows){
+  const items = roadmap(rows);
+  const total = rows.length || 1;
+  document.getElementById("road-lead").innerHTML =
+    `下表是从上面 <b>${rows.length}</b> 个岗位（含备选）反推出来的：把每个岗位要求的课程知识点汇总、去重、按“有多少个岗位需要它”排序。` +
+    `<b>出现次数越多，越该先学</b>；标为“本课程未覆盖”的，是岗位要求但课堂不教的，需要自学或在《Java Web》里补。<br>` +
+    `注意两点：<b>面向对象（D3，48学时）是课程主干</b>，即使个别岗位没点名也必学；反过来，岗位表里只标注了核心的那几项，所以“出现 1 次”不等于不需要。`;
+  // 课程内知识点取前 12 条，缺口全部保留（不因截断而看不到）
+  const showItems = items.filter(x=>x.type==="skill").slice(0,12)
+                     .concat(items.filter(x=>x.type==="gap"));
+  document.querySelector("#tb3 tbody").innerHTML = showItems.map(it=>{
+    const pr = it.type==="gap" ? ["要补","p2"]
+             : it.ratio>=0.5? ["必学","p1"] : it.ratio>=0.25? ["重点","p2"] : ["了解","p3"];
+    const pct = Math.max(Math.round(it.n/total*100), 6);
+    return `<tr class="${it.type==="gap"?"isgap":""}">
+      <td data-l="优先级"><span class="pri ${pr[1]}">${pr[0]}</span></td>
+      <td class="kpcell" data-l="知识点">${it.kp}${it.type==="gap"? ' <span class="mini gap">本课程未覆盖</span>':""}${(it.dom==="D3" && it.ratio<0.5)? ' <span class="mini main">课程主干 48学时</span>':""}</td>
+      <td class="cap" data-l="要练成什么能力">${it.req}<div class="job-s">${it.type==="gap"? "课程缺口" : areaTag(it.area)} · ${it.lv}</div></td>
+      <td data-l="在哪学">${it.scene}</td>
+      <td data-l="需求度"><div class="bar"><i style="width:${pct}%"></i></div><span class="cnt-s">${it.n}/${total} 个岗位</span></td>
+      <td data-l="怎么练">${it.carrier}</td>
+    </tr>`;
+  }).join("");
+  return items;
+}
+
+function parsePay(s){
+  const nums=[...String(s).matchAll(/\d{4,5}/g)].map(m=>+m[0]);
+  return nums.length>=2? [Math.min(...nums), Math.max(...nums)] : (nums.length? [nums[0],nums[0]] : [0,0]);
+}
+function render(a){
+  const keyOf = x => x.r.ind+"|"+x.r.job+"|"+x.r.city;
+  const strict = run(a);
+  const strictN = strict.length;
+  let main = strict.slice(0,6);
+  const seen = new Set(main.map(keyOf));
+  let altRows=[], altLabels=[], fallback=false;
+
+  if(main.length < 3){
+    const TARGET = 6;
+    const tries = [
+      [{...a, grp:"不限"}, "行业不限"],
+      [{...a, cat:"不限"}, "岗位不限"],
+      [{...a, city:"不限"}, "城市不限"],
+    ];
+    for(const [na,label] of tries){
+      const list = run(na).filter(x=>!seen.has(keyOf(x)));
+      if(!list.length) continue;
+      const need = TARGET - (main.length + altRows.length);
+      for(const x of list.slice(0, Math.max(need,0))){
+        altRows.push(x); seen.add(keyOf(x));
+      }
+      altLabels.push(label);
+      if(main.length+altRows.length >= TARGET) break;
+    }
+    if(main.length+altRows.length < 3){
+      const list = run({city:"不限",grp:"不限",cat:"不限",pref:a.pref}).filter(x=>!seen.has(keyOf(x)));
+      for(const x of list.slice(0, TARGET-(main.length+altRows.length))){
+        altRows.push(x); seen.add(keyOf(x));
+      }
+      fallback = true;
+    }
+    if(!main.length){ main = altRows.slice(0,6); altRows = altRows.slice(6); }
+  } else if(a.city!=="不限"){
+    altRows = run({...a, city:"不限"}).filter(x=>!seen.has(keyOf(x))).slice(0,3);
+    if(altRows.length) altLabels=["城市不限"];
+  }
+
+  const maxS = main.length? main[0].s : (altRows.length? altRows[0].s : 1);
+  document.querySelector("#tb tbody").innerHTML = main.map(x=>cellRow(x, maxS)).join("");
+  const altBox = document.getElementById("alt-box");
+  if(altRows.length){
+    altBox.style.display="block";
+    document.getElementById("alt-note").textContent = altLabels.length
+      ? `放宽「${altLabels.join("、")}」后还可以考虑这 ${altRows.length} 个`
+      : `同类岗位在其他城市还有 ${altRows.length} 个，可以对比看看`;
+    document.querySelector("#tb2 tbody").innerHTML = altRows.map(x=>cellRow(x, altRows[0].s||1)).join("");
+  } else altBox.style.display="none";
+
+  // 摘要
+  const cName = a.city==="不限" ? "不限城市" : a.city;
+  const show = main.length? main : altRows;
+  const spans = show.map(x=>parsePay(x.r.pay));
+  const pmin = spans.length? Math.min(...spans.map(s=>s[0])) : 0;
+  const pmax = spans.length? Math.max(...spans.map(s=>s[1])) : 0;
+  document.getElementById("sum-l1").textContent =
+    `你的选择：${cName} · ${a.grp} · ${a.cat}${a.pref? " · 优先"+PREF.find(p=>p[0]===a.pref)[1]:""}`;
+  document.getElementById("sum-l2").innerHTML = strictN
+    ? `符合全部条件的岗位有 <span>${strictN}</span> 个，应届起薪约 <span>${pmin}—${pmax}</span> 元/月`
+    : `按你的条件暂无完全匹配，为你推荐 <span>${main.length}</span> 个相近方向，应届起薪约 <span>${pmin}—${pmax}</span> 元/月`;
+  document.getElementById("sum-tags").innerHTML =
+    show.slice(0,4).map(x=>`<i>${x.r.job.replace("（初级）","").replace("（入门）","")} · ${x.r.city}</i>`).join("");
+  document.getElementById("t1s").textContent = strictN>=3
+    ? "按匹配度从高到低排列"
+    : (fallback && !strictN ? "暂无完全匹配，下表按常见方向与你的偏好推荐"
+      : (strictN? "符合全部条件的岗位较少，已自动放宽部分条件" : "按匹配度从高到低排列"));
+
+  // 学习清单
+  const roadItems = renderRoad(main.concat(altRows));
+
+  // 解读
+  const allGaps = new Set();
+  show.forEach(x=>gapsOf(x.r).forEach(g=>allGaps.add(g.name)));
+  const gList = [...allGaps];
+  const isDev = show.some(x=>x.r.cat==="开发类");
+  const cityN = main.filter(x=>cityScore(x.r, a.city)===45).length;
+  document.getElementById("notes").innerHTML = `
+    <div class="note">
+      <b>这些结果是怎么选出来的</b>
+      <p>按「城市 45 分 + 行业 25 分 + 岗位 30 分」加权，再叠加你的偏好排序。${a.city==="不限"?"你没有限定城市，排在前面的自然是岗位量最大的一线、新一线城市；如果打算留在本地，回到第 1 题选具体城市再看一次。":`在 ${cName} 能落地的严格匹配岗位 ${main.length} 个${altRows.length? "，另有 "+altRows.length+" 个放宽条件后可以接受的方向（见上表二）":""}。`}</p>
+    </div>
+    <div class="note a">
+      <b>你还要补这几项</b>
+      <p>${gList.length? "岗位要求里出现、但本课程没有覆盖的内容：<b>"+gList.join("、")+"</b>。这几项恰好是企业面试常问、起薪差 1000—2000 元的点，建议在《Java Web》或自学中补齐。" : "这些岗位的能力点基本落在本课程范围内，重点是把环境配置、报错阅读、堆栈定位这三件事练到不用查资料——这三项占学时最少，却是所有岗位的通用门槛。"}</p>
+    </div>
+    <div class="note g">
+      <b>这学期怎么安排</b>
+      <p>${(function(){
+        const must = roadItems.filter(x=>x.type==="skill" && x.ratio>=0.5).slice(0,3);
+        const gaps = roadItems.filter(x=>x.type==="gap");
+        let t = must.length
+          ? `先攻 <b>${must.map(x=>x.kp).join("、")}</b>（分别在${must.map(x=>x.scene).join("、")}），这几项在 ${must[0].n}/${main.concat(altRows).length} 个岗位里都被要求，学完就能覆盖大部分岗位的入门要求。`
+          : `先按课程进度把 D1 环境配置与 D6 调试练熟，它们是所有岗位的通用底座。`;
+        t += isDev
+          ? " 课程设计阶段把完整项目做成作品集（含 README、提交记录），面试讲清“你负责哪一块、怎么排错”。"
+          : " 课程设计阶段整理一份“问题处理记录”（现象—排查—根因—结果），非开发岗面试只看你能不能把问题说清、过程记清。";
+        if(gaps.length) t += ` 另有 <b>${gaps.length}</b> 项课堂不教但岗位要求（${gaps.map(x=>x.kp.split("（")[0]).join("、")}），建议在课程设计或《Java Web》里补上——面试最容易在这里被问倒。`;
+        return t;
+      })()}</p>
+    </div>`;
+
+  document.getElementById("result").style.display="block";
+  lastRows = show.slice(0,6);
+  saveRecord(a, show);
+  document.getElementById("result").scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+/* ---------- 复制 ---------- */
+function toText(){
+  const head = "| 岗位 | 城市 | 应届起薪 | 代表企业 | 要补的能力 |\n|---|---|---|---|---|";
+  const body = lastRows.map(x=>{
+    const gs = gapsOf(x.r).map(g=>g.name).join("、") || "无";
+    return `| ${x.r.job} | ${x.r.city} | ${x.r.pay} | ${x.r.firm.split("、").slice(0,3).join("、")} | ${gs} |`;
+  }).join("\n");
+  const s = `【我的岗位匹配结果】${state.city} · ${state.grp} · ${state.cat}\n\n${head}\n${body}\n\n数据来源：《Java程序设计》岗位能力图谱（66条岗位）`;
+  return s;
+}
+document.getElementById("copy").onclick = async ()=>{
+  const t = toText();
+  try{ await navigator.clipboard.writeText(t); toast("已复制，可直接粘贴到微信或 Excel"); }
+  catch(e){
+    const ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta); ta.select();
+    document.execCommand("copy"); ta.remove(); toast("已复制");
+  }
+};
+
+/* ---------- 记录与教师汇总 ---------- */
+function saveRecord(a, top){
+  try{
+    const k="jm_records", arr=JSON.parse(localStorage.getItem(k)||"[]");
+    arr.push({t:new Date().toISOString().slice(0,16).replace("T"," "),
+      city:a.city, grp:a.grp, cat:a.cat, pref:a.pref||"",
+      top: top.slice(0,3).map(x=>x.r.job+"@"+x.r.city).join(" / ")});
+    localStorage.setItem(k, JSON.stringify(arr.slice(-500)));
+  }catch(e){}
+}
+function stats(){
+  const arr = JSON.parse(localStorage.getItem("jm_records")||"[]");
+  document.getElementById("rec-n").textContent = arr.length;
+  const cnt = (key)=>{
+    const o={}; arr.forEach(x=>{ const v=x[key]||"—"; o[v]=(o[v]||0)+1; });
+    return Object.entries(o).sort((a,b)=>b[1]-a[1]);
+  };
+  const blk = (title, pairs)=>`<div style="margin:12px 0 4px;font-size:12.5px;color:#5b7286">${title}</div>` +
+    (pairs.length? pairs.map(([k,v])=>`<div class="stat-row"><span>${k}</span><b>${v} 人</b></div>`).join("") : `<div class="stat-row"><span>暂无数据</span></div>`);
+  document.getElementById("stat").innerHTML =
+    blk("意向城市", cnt("city")) + blk("意向行业", cnt("grp")) + blk("意向岗位", cnt("cat"));
+  return arr;
+}
+document.getElementById("teacher").onclick = ()=>{ stats(); document.getElementById("mask").classList.add("on"); };
+document.getElementById("close").onclick = ()=> document.getElementById("mask").classList.remove("on");
+document.getElementById("csv").onclick = ()=>{
+  const arr = JSON.parse(localStorage.getItem("jm_records")||"[]");
+  if(!arr.length){ toast("还没有记录"); return; }
+  const head = "时间,意向城市,意向行业,意向岗位,最看重,前三个匹配岗位\n";
+  const body = arr.map(x=>[x.t,x.city,x.grp,x.cat,x.pref,(x.top||"").replace(/,/g,"、")].join(",")).join("\n");
+  const blob = new Blob(["\ufeff"+head+body], {type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="岗位匹配填写记录.csv"; a.click(); toast("已导出");
+};
+
+/* ---------- 交互 ---------- */
+document.getElementById("go").onclick = ()=> render({...state});
+document.getElementById("reset").onclick = ()=>{
+  Object.keys(state).forEach(k=>state[k]=null);
+  document.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));
+  document.getElementById("go").disabled = true;
+  document.getElementById("result").style.display="none";
+  window.scrollTo({top:0,behavior:"smooth"});
+};
+document.getElementById("again").onclick = ()=> document.getElementById("form").scrollIntoView({behavior:"smooth"});
+function toast(m){
+  const t=document.getElementById("toast"); t.textContent=m; t.classList.add("on");
+  setTimeout(()=>t.classList.remove("on"), 2200);
+}
+</script>
+</body>
+</html>
